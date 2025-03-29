@@ -1,0 +1,10 @@
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/lpx_image.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/test_lpx.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/test_mt_lpx.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/lpx_web_server.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/edit_cache.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/rebuild_cache.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/list_install_components.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/install.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/install/local.dir
+/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/install/strip.dir
