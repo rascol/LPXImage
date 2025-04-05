@@ -10,13 +10,13 @@ namespace lpx {
 // Using implementations from lpx_common.h now
 
 // LPXRenderer implementation
-LPXRenderer::LPXRenderer() {
+lpx::LPXRenderer::LPXRenderer() {
 }
 
-LPXRenderer::~LPXRenderer() {
+lpx::LPXRenderer::~LPXRenderer() {
 }
 
-bool LPXRenderer::setScanTables(const std::shared_ptr<LPXTables>& tables) {
+bool lpx::LPXRenderer::setScanTables(const std::shared_ptr<LPXTables>& tables) {
     if (!tables) {
         std::cerr << "ERROR: Null tables provided to setScanTables" << std::endl;
         return false;
@@ -27,6 +27,7 @@ bool LPXRenderer::setScanTables(const std::shared_ptr<LPXTables>& tables) {
         return false;
     }
     
+    
     // Verify spiralPer is valid
     if (tables->spiralPer < 0.1f || tables->spiralPer > 1000.0f) {
         std::cerr << "ERROR: Invalid spiralPer in tables: " << tables->spiralPer << ", not adding" << std::endl;
@@ -34,11 +35,10 @@ bool LPXRenderer::setScanTables(const std::shared_ptr<LPXTables>& tables) {
     }
     
     scanTablesByPeriod[tables->spiralPer] = tables;
-    
     return true;
 }
 
-bool LPXRenderer::hasScanTables(float spiralPer) const {
+bool lpx::LPXRenderer::hasScanTables(float spiralPer) const {
     for (const auto& entry : scanTablesByPeriod) {
         if (lpx::floatEquals(entry.first, spiralPer)) {
             return true;
@@ -48,7 +48,7 @@ bool LPXRenderer::hasScanTables(float spiralPer) const {
 }
 
 // Extract RGB values from an LPX cell
-void LPXRenderer::getRGBFromLPCell(uint32_t lpCell, uint8_t& r, uint8_t& g, uint8_t& b) {
+void lpx::LPXRenderer::getRGBFromLPCell(uint32_t lpCell, uint8_t& r, uint8_t& g, uint8_t& b) {
     // In our implementation, the cell format is BGR (OpenCV default)
     b = lpCell & 0xFF;
     g = (lpCell >> 8) & 0xFF;
@@ -57,28 +57,22 @@ void LPXRenderer::getRGBFromLPCell(uint32_t lpCell, uint8_t& r, uint8_t& g, uint
     // Add debug for the first few cells with non-zero values
     if (lpCell != 0 && r + g + b > 0) {
         static int debugCount = 0;
-        if (debugCount < 5) {
-            std::cout << "DEBUG: Cell value 0x" << std::hex << lpCell << std::dec
-                      << " -> R:" << (int)r << " G:" << (int)g << " B:" << (int)b << std::endl;
-            debugCount++;
-        }
+        debugCount++;
     }
 }
 
-Rect LPXRenderer::getScanBoundingBox(const std::shared_ptr<LPXImage>& lpxImage, int width, int height, float scaleFactor) {
+lpx::Rect lpx::LPXRenderer::getScanBoundingBox(const std::shared_ptr<LPXImage>& lpxImage, int width, int height, float scaleFactor) {
     float xOfs = lpxImage->getXOffset();
     float yOfs = lpxImage->getYOffset();
-    
      
     int j_ofs = static_cast<int>(std::floor(xOfs * scaleFactor + 0.5f));  // Manual rounding
     int k_ofs = static_cast<int>(std::floor(yOfs * scaleFactor + 0.5f));  // Manual rounding
+
 
     // Calculate spiral radius based on the total number of cells
     // This matches the JavaScript implementation
     float spiralRadius = getSpiralRadius(lpxImage->getLength(), lpxImage->getSpiralPeriod());
     int spRad = static_cast<int>(std::floor(spiralRadius + 0.5f));  // Manual rounding
-    
-    std::cout << "DEBUG: spiralRadius: " << spiralRadius << ", spRad: " << spRad << std::endl;
     
     int boundLeft = -spRad;
     int boundRight = spRad;
@@ -97,9 +91,6 @@ Rect LPXRenderer::getScanBoundingBox(const std::shared_ptr<LPXImage>& lpxImage, 
     int imgWid_2 = static_cast<int>(std::floor(0.5f * width + 0.5f));  // Manual rounding
     int imgHt_2 = static_cast<int>(std::floor(0.5f * height + 0.5f));  // Manual rounding
 
-    std::cout << "DEBUG: boundLeft: " << boundLeft << ", boundRight: " << boundRight << ", boundTop: " << boundTop << ", boundBottom: " << boundBottom << std::endl;
-    std::cout << "DEBUG: imgWid_2: " << imgWid_2 << ", imgHt_2: " << imgHt_2 << std::endl;
-    
     // Get the center of the output image
     int imgCenterX = width / 2;
     int imgCenterY = height / 2;
@@ -117,9 +108,8 @@ Rect LPXRenderer::getScanBoundingBox(const std::shared_ptr<LPXImage>& lpxImage, 
     int xMax = std::min(width, adjustedCenterX + spRad);
     int yMin = std::max(0, adjustedCenterY - spRad);
     int yMax = std::min(height, adjustedCenterY + spRad);
-
-
-    Rect rect;
+    
+    lpx::Rect rect;
     rect.xMin = xMin;
     rect.xMax = xMax;
     rect.yMin = yMin;
@@ -128,7 +118,7 @@ Rect LPXRenderer::getScanBoundingBox(const std::shared_ptr<LPXImage>& lpxImage, 
     return rect;
 }
 
-cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, int width, int height, 
+cv::Mat lpx::LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, int width, int height, 
                                    float scale, int cellOffset, int cellRange) {
     if (!lpxImage || lpxImage->getLength() <= 0) {
         std::cerr << "Invalid LPXImage or empty" << std::endl;
@@ -183,7 +173,7 @@ cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, in
     int colMax_s = width;
     int rowMin_s = 0;
     int rowMax_s = height;
-      
+    
     float scaleFactor = imageCanvasRatio * scale;
     
     // Position offsets
@@ -226,7 +216,6 @@ cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, in
         }
     }
     
-    
     // Check which fovea cells actually have data
     std::vector<int> nonZeroFoveaCells;
     for (int i = 0; i <= scanTables->lastFoveaIndex && i < maxLen; i++) {
@@ -235,8 +224,8 @@ cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, in
         }
     }
     
-    
     if (!nonZeroFoveaCells.empty()) {
+        std::cout << "DEBUG: First few non-zero fovea cells:";
         for (int i = 0; i < std::min(10, static_cast<int>(nonZeroFoveaCells.size())); i++) {
             std::cout << " " << nonZeroFoveaCells[i];
         }
@@ -255,14 +244,14 @@ cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, in
         green[i] = g;
         blue[i] = b;
     }
-    
+     
     // Set up map dimensions
     int w_m = scanTables->mapWidth;
     int h_m = w_m;
     
     int j0 = j_ofs + static_cast<int>(std::floor(w_s / 2.0f));
     int k0 = k_ofs + static_cast<int>(std::floor(h_s / 2.0f));
-     
+        
     // We don't need most of the previous rendering calculations
     // Keep track of our image scaling though
     

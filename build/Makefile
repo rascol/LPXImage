@@ -57,10 +57,10 @@ RM = /opt/homebrew/Cellar/cmake/3.30.3/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/ray/Desktop/log-polar-vision
+CMAKE_SOURCE_DIR = /Users/ray/Desktop/LPXImage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/ray/Desktop/log-polar-vision/build_mt_fix
+CMAKE_BINARY_DIR = /Users/ray/Desktop/LPXImage/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -132,9 +132,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles /Users/ray/Desktop/log-polar-vision/build_mt_fix//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles /Users/ray/Desktop/LPXImage/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -175,19 +175,6 @@ lpx_image/fast:
 .PHONY : lpx_image/fast
 
 #=============================================================================
-# Target rules for targets named test_lpx
-
-# Build rule for target.
-test_lpx: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_lpx
-.PHONY : test_lpx
-
-# fast build rule for target.
-test_lpx/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/build
-.PHONY : test_lpx/fast
-
-#=============================================================================
 # Target rules for targets named test_mt_lpx
 
 # Build rule for target.
@@ -201,17 +188,30 @@ test_mt_lpx/fast:
 .PHONY : test_mt_lpx/fast
 
 #=============================================================================
-# Target rules for targets named lpx_web_server
+# Target rules for targets named main_webcam_server
 
 # Build rule for target.
-lpx_web_server: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lpx_web_server
-.PHONY : lpx_web_server
+main_webcam_server: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main_webcam_server
+.PHONY : main_webcam_server
 
 # fast build rule for target.
-lpx_web_server/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/build
-.PHONY : lpx_web_server/fast
+main_webcam_server/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/build
+.PHONY : main_webcam_server/fast
+
+#=============================================================================
+# Target rules for targets named main_debug_renderer
+
+# Build rule for target.
+main_debug_renderer: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main_debug_renderer
+.PHONY : main_debug_renderer
+
+# fast build rule for target.
+main_debug_renderer/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/build
+.PHONY : main_debug_renderer/fast
 
 src/lpx_globals.o: src/lpx_globals.cpp.o
 .PHONY : src/lpx_globals.o
@@ -219,6 +219,8 @@ src/lpx_globals.o: src/lpx_globals.cpp.o
 # target to build an object file
 src/lpx_globals.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_globals.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_globals.cpp.o
 .PHONY : src/lpx_globals.cpp.o
 
 src/lpx_globals.i: src/lpx_globals.cpp.i
@@ -227,6 +229,8 @@ src/lpx_globals.i: src/lpx_globals.cpp.i
 # target to preprocess a source file
 src/lpx_globals.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_globals.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_globals.cpp.i
 .PHONY : src/lpx_globals.cpp.i
 
 src/lpx_globals.s: src/lpx_globals.cpp.s
@@ -235,79 +239,114 @@ src/lpx_globals.s: src/lpx_globals.cpp.s
 # target to generate assembly for a file
 src/lpx_globals.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_globals.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_globals.cpp.s
 .PHONY : src/lpx_globals.cpp.s
 
-src/lpx_image.o: src/lpx_image.cpp.o
-.PHONY : src/lpx_image.o
+src/lpx_logging.o: src/lpx_logging.cpp.o
+.PHONY : src/lpx_logging.o
 
 # target to build an object file
-src/lpx_image.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o
-.PHONY : src/lpx_image.cpp.o
+src/lpx_logging.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_logging.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_logging.cpp.o
+.PHONY : src/lpx_logging.cpp.o
 
-src/lpx_image.i: src/lpx_image.cpp.i
-.PHONY : src/lpx_image.i
+src/lpx_logging.i: src/lpx_logging.cpp.i
+.PHONY : src/lpx_logging.i
 
 # target to preprocess a source file
-src/lpx_image.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_image.cpp.i
-.PHONY : src/lpx_image.cpp.i
+src/lpx_logging.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_logging.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_logging.cpp.i
+.PHONY : src/lpx_logging.cpp.i
 
-src/lpx_image.s: src/lpx_image.cpp.s
-.PHONY : src/lpx_image.s
+src/lpx_logging.s: src/lpx_logging.cpp.s
+.PHONY : src/lpx_logging.s
 
 # target to generate assembly for a file
-src/lpx_image.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_image.cpp.s
-.PHONY : src/lpx_image.cpp.s
+src/lpx_logging.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_logging.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_logging.cpp.s
+.PHONY : src/lpx_logging.cpp.s
 
-src/lpx_renderer.o: src/lpx_renderer.cpp.o
-.PHONY : src/lpx_renderer.o
+src/lpx_webcam_server.o: src/lpx_webcam_server.cpp.o
+.PHONY : src/lpx_webcam_server.o
 
 # target to build an object file
-src/lpx_renderer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o
-.PHONY : src/lpx_renderer.cpp.o
+src/lpx_webcam_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_webcam_server.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_webcam_server.cpp.o
+.PHONY : src/lpx_webcam_server.cpp.o
 
-src/lpx_renderer.i: src/lpx_renderer.cpp.i
-.PHONY : src/lpx_renderer.i
+src/lpx_webcam_server.i: src/lpx_webcam_server.cpp.i
+.PHONY : src/lpx_webcam_server.i
 
 # target to preprocess a source file
-src/lpx_renderer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.i
-.PHONY : src/lpx_renderer.cpp.i
+src/lpx_webcam_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_webcam_server.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_webcam_server.cpp.i
+.PHONY : src/lpx_webcam_server.cpp.i
 
-src/lpx_renderer.s: src/lpx_renderer.cpp.s
-.PHONY : src/lpx_renderer.s
+src/lpx_webcam_server.s: src/lpx_webcam_server.cpp.s
+.PHONY : src/lpx_webcam_server.s
 
 # target to generate assembly for a file
-src/lpx_renderer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.s
-.PHONY : src/lpx_renderer.cpp.s
+src/lpx_webcam_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/lpx_webcam_server.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/lpx_webcam_server.cpp.s
+.PHONY : src/lpx_webcam_server.cpp.s
 
-src/lpx_web_server.o: src/lpx_web_server.cpp.o
-.PHONY : src/lpx_web_server.o
+src/main_debug_renderer.o: src/main_debug_renderer.cpp.o
+.PHONY : src/main_debug_renderer.o
 
 # target to build an object file
-src/lpx_web_server.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/src/lpx_web_server.cpp.o
-.PHONY : src/lpx_web_server.cpp.o
+src/main_debug_renderer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/main_debug_renderer.cpp.o
+.PHONY : src/main_debug_renderer.cpp.o
 
-src/lpx_web_server.i: src/lpx_web_server.cpp.i
-.PHONY : src/lpx_web_server.i
+src/main_debug_renderer.i: src/main_debug_renderer.cpp.i
+.PHONY : src/main_debug_renderer.i
 
 # target to preprocess a source file
-src/lpx_web_server.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/src/lpx_web_server.cpp.i
-.PHONY : src/lpx_web_server.cpp.i
+src/main_debug_renderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/main_debug_renderer.cpp.i
+.PHONY : src/main_debug_renderer.cpp.i
 
-src/lpx_web_server.s: src/lpx_web_server.cpp.s
-.PHONY : src/lpx_web_server.s
+src/main_debug_renderer.s: src/main_debug_renderer.cpp.s
+.PHONY : src/main_debug_renderer.s
 
 # target to generate assembly for a file
-src/lpx_web_server.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/src/lpx_web_server.cpp.s
-.PHONY : src/lpx_web_server.cpp.s
+src/main_debug_renderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/main_debug_renderer.cpp.s
+.PHONY : src/main_debug_renderer.cpp.s
+
+src/main_webcam_server.o: src/main_webcam_server.cpp.o
+.PHONY : src/main_webcam_server.o
+
+# target to build an object file
+src/main_webcam_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/main_webcam_server.cpp.o
+.PHONY : src/main_webcam_server.cpp.o
+
+src/main_webcam_server.i: src/main_webcam_server.cpp.i
+.PHONY : src/main_webcam_server.i
+
+# target to preprocess a source file
+src/main_webcam_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/main_webcam_server.cpp.i
+.PHONY : src/main_webcam_server.cpp.i
+
+src/main_webcam_server.s: src/main_webcam_server.cpp.s
+.PHONY : src/main_webcam_server.s
+
+# target to generate assembly for a file
+src/main_webcam_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/main_webcam_server.cpp.s
+.PHONY : src/main_webcam_server.cpp.s
 
 src/mt_lpx_image.o: src/mt_lpx_image.cpp.o
 .PHONY : src/mt_lpx_image.o
@@ -315,6 +354,8 @@ src/mt_lpx_image.o: src/mt_lpx_image.cpp.o
 # target to build an object file
 src/mt_lpx_image.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_image.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_image.cpp.o
 .PHONY : src/mt_lpx_image.cpp.o
 
 src/mt_lpx_image.i: src/mt_lpx_image.cpp.i
@@ -323,6 +364,8 @@ src/mt_lpx_image.i: src/mt_lpx_image.cpp.i
 # target to preprocess a source file
 src/mt_lpx_image.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_image.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_image.cpp.i
 .PHONY : src/mt_lpx_image.cpp.i
 
 src/mt_lpx_image.s: src/mt_lpx_image.cpp.s
@@ -331,31 +374,39 @@ src/mt_lpx_image.s: src/mt_lpx_image.cpp.s
 # target to generate assembly for a file
 src/mt_lpx_image.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_image.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_image.cpp.s
 .PHONY : src/mt_lpx_image.cpp.s
 
-src/test_lpx.o: src/test_lpx.cpp.o
-.PHONY : src/test_lpx.o
+src/mt_lpx_renderer.o: src/mt_lpx_renderer.cpp.o
+.PHONY : src/mt_lpx_renderer.o
 
 # target to build an object file
-src/test_lpx.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/src/test_lpx.cpp.o
-.PHONY : src/test_lpx.cpp.o
+src/mt_lpx_renderer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_renderer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_renderer.cpp.o
+.PHONY : src/mt_lpx_renderer.cpp.o
 
-src/test_lpx.i: src/test_lpx.cpp.i
-.PHONY : src/test_lpx.i
+src/mt_lpx_renderer.i: src/mt_lpx_renderer.cpp.i
+.PHONY : src/mt_lpx_renderer.i
 
 # target to preprocess a source file
-src/test_lpx.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/src/test_lpx.cpp.i
-.PHONY : src/test_lpx.cpp.i
+src/mt_lpx_renderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_renderer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_renderer.cpp.i
+.PHONY : src/mt_lpx_renderer.cpp.i
 
-src/test_lpx.s: src/test_lpx.cpp.s
-.PHONY : src/test_lpx.s
+src/mt_lpx_renderer.s: src/mt_lpx_renderer.cpp.s
+.PHONY : src/mt_lpx_renderer.s
 
 # target to generate assembly for a file
-src/test_lpx.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/src/test_lpx.cpp.s
-.PHONY : src/test_lpx.cpp.s
+src/mt_lpx_renderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/src/mt_lpx_renderer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/src/mt_lpx_renderer.cpp.s
+.PHONY : src/mt_lpx_renderer.cpp.s
 
 src/test_mt_lpx.o: src/test_mt_lpx.cpp.o
 .PHONY : src/test_mt_lpx.o
@@ -394,27 +445,30 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... lpx_image"
-	@echo "... lpx_web_server"
-	@echo "... test_lpx"
+	@echo "... main_debug_renderer"
+	@echo "... main_webcam_server"
 	@echo "... test_mt_lpx"
 	@echo "... src/lpx_globals.o"
 	@echo "... src/lpx_globals.i"
 	@echo "... src/lpx_globals.s"
-	@echo "... src/lpx_image.o"
-	@echo "... src/lpx_image.i"
-	@echo "... src/lpx_image.s"
-	@echo "... src/lpx_renderer.o"
-	@echo "... src/lpx_renderer.i"
-	@echo "... src/lpx_renderer.s"
-	@echo "... src/lpx_web_server.o"
-	@echo "... src/lpx_web_server.i"
-	@echo "... src/lpx_web_server.s"
+	@echo "... src/lpx_logging.o"
+	@echo "... src/lpx_logging.i"
+	@echo "... src/lpx_logging.s"
+	@echo "... src/lpx_webcam_server.o"
+	@echo "... src/lpx_webcam_server.i"
+	@echo "... src/lpx_webcam_server.s"
+	@echo "... src/main_debug_renderer.o"
+	@echo "... src/main_debug_renderer.i"
+	@echo "... src/main_debug_renderer.s"
+	@echo "... src/main_webcam_server.o"
+	@echo "... src/main_webcam_server.i"
+	@echo "... src/main_webcam_server.s"
 	@echo "... src/mt_lpx_image.o"
 	@echo "... src/mt_lpx_image.i"
 	@echo "... src/mt_lpx_image.s"
-	@echo "... src/test_lpx.o"
-	@echo "... src/test_lpx.i"
-	@echo "... src/test_lpx.s"
+	@echo "... src/mt_lpx_renderer.o"
+	@echo "... src/mt_lpx_renderer.i"
+	@echo "... src/mt_lpx_renderer.s"
 	@echo "... src/test_mt_lpx.o"
 	@echo "... src/test_mt_lpx.i"
 	@echo "... src/test_mt_lpx.s"

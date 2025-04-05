@@ -54,19 +54,19 @@ RM = /opt/homebrew/Cellar/cmake/3.30.3/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/ray/Desktop/log-polar-vision
+CMAKE_SOURCE_DIR = /Users/ray/Desktop/LPXImage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/ray/Desktop/log-polar-vision/build_mt_fix
+CMAKE_BINARY_DIR = /Users/ray/Desktop/LPXImage/build
 
 #=============================================================================
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
 all: CMakeFiles/lpx_image.dir/all
-all: CMakeFiles/test_lpx.dir/all
 all: CMakeFiles/test_mt_lpx.dir/all
-all: CMakeFiles/lpx_web_server.dir/all
+all: CMakeFiles/main_webcam_server.dir/all
+all: CMakeFiles/main_debug_renderer.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -75,9 +75,9 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/lpx_image.dir/clean
-clean: CMakeFiles/test_lpx.dir/clean
 clean: CMakeFiles/test_mt_lpx.dir/clean
-clean: CMakeFiles/lpx_web_server.dir/clean
+clean: CMakeFiles/main_webcam_server.dir/clean
+clean: CMakeFiles/main_debug_renderer.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -87,14 +87,14 @@ clean: CMakeFiles/lpx_web_server.dir/clean
 CMakeFiles/lpx_image.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_image.dir/build.make CMakeFiles/lpx_image.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=1,2,3,4,5 "Built target lpx_image"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=1,2,3,4,5 "Built target lpx_image"
 .PHONY : CMakeFiles/lpx_image.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/lpx_image.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 5
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/lpx_image.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 0
 .PHONY : CMakeFiles/lpx_image.dir/rule
 
 # Convenience name for target.
@@ -107,46 +107,20 @@ CMakeFiles/lpx_image.dir/clean:
 .PHONY : CMakeFiles/lpx_image.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/test_lpx.dir
-
-# All Build rule for target.
-CMakeFiles/test_lpx.dir/all: CMakeFiles/lpx_image.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=8,9 "Built target test_lpx"
-.PHONY : CMakeFiles/test_lpx.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/test_lpx.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 7
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_lpx.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 0
-.PHONY : CMakeFiles/test_lpx.dir/rule
-
-# Convenience name for target.
-test_lpx: CMakeFiles/test_lpx.dir/rule
-.PHONY : test_lpx
-
-# clean rule for target.
-CMakeFiles/test_lpx.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_lpx.dir/build.make CMakeFiles/test_lpx.dir/clean
-.PHONY : CMakeFiles/test_lpx.dir/clean
-
-#=============================================================================
 # Target rules for target CMakeFiles/test_mt_lpx.dir
 
 # All Build rule for target.
 CMakeFiles/test_mt_lpx.dir/all: CMakeFiles/lpx_image.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mt_lpx.dir/build.make CMakeFiles/test_mt_lpx.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mt_lpx.dir/build.make CMakeFiles/test_mt_lpx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=10,11 "Built target test_mt_lpx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=20,21 "Built target test_mt_lpx"
 .PHONY : CMakeFiles/test_mt_lpx.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_mt_lpx.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_mt_lpx.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 0
 .PHONY : CMakeFiles/test_mt_lpx.dir/rule
 
 # Convenience name for target.
@@ -159,30 +133,56 @@ CMakeFiles/test_mt_lpx.dir/clean:
 .PHONY : CMakeFiles/test_mt_lpx.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/lpx_web_server.dir
+# Target rules for target CMakeFiles/main_webcam_server.dir
 
 # All Build rule for target.
-CMakeFiles/lpx_web_server.dir/all: CMakeFiles/lpx_image.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=6,7 "Built target lpx_web_server"
-.PHONY : CMakeFiles/lpx_web_server.dir/all
+CMakeFiles/main_webcam_server.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=13,14,15,16,17,18,19 "Built target main_webcam_server"
+.PHONY : CMakeFiles/main_webcam_server.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/lpx_web_server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 7
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/lpx_web_server.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles 0
-.PHONY : CMakeFiles/lpx_web_server.dir/rule
+CMakeFiles/main_webcam_server.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/main_webcam_server.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 0
+.PHONY : CMakeFiles/main_webcam_server.dir/rule
 
 # Convenience name for target.
-lpx_web_server: CMakeFiles/lpx_web_server.dir/rule
-.PHONY : lpx_web_server
+main_webcam_server: CMakeFiles/main_webcam_server.dir/rule
+.PHONY : main_webcam_server
 
 # clean rule for target.
-CMakeFiles/lpx_web_server.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lpx_web_server.dir/build.make CMakeFiles/lpx_web_server.dir/clean
-.PHONY : CMakeFiles/lpx_web_server.dir/clean
+CMakeFiles/main_webcam_server.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_webcam_server.dir/build.make CMakeFiles/main_webcam_server.dir/clean
+.PHONY : CMakeFiles/main_webcam_server.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/main_debug_renderer.dir
+
+# All Build rule for target.
+CMakeFiles/main_debug_renderer.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=6,7,8,9,10,11,12 "Built target main_debug_renderer"
+.PHONY : CMakeFiles/main_debug_renderer.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/main_debug_renderer.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/main_debug_renderer.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ray/Desktop/LPXImage/build/CMakeFiles 0
+.PHONY : CMakeFiles/main_debug_renderer.dir/rule
+
+# Convenience name for target.
+main_debug_renderer: CMakeFiles/main_debug_renderer.dir/rule
+.PHONY : main_debug_renderer
+
+# clean rule for target.
+CMakeFiles/main_debug_renderer.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main_debug_renderer.dir/build.make CMakeFiles/main_debug_renderer.dir/clean
+.PHONY : CMakeFiles/main_debug_renderer.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

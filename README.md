@@ -1,4 +1,4 @@
-# Log-Polar Vision
+# Log-Polar Image
 This is strictly experimental and under development. The conversions work only for single images at present. No streaming yet. It is a cross-platform implementation of log-polar image transformation for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision.
 
 ## Features
@@ -71,7 +71,7 @@ int main() {
 ## Usage from Node.js
 
 ```javascript
-const lpx = require('log-polar-vision');
+const lpx = require('LPXImage');
 
 // Initialize
 lpx.initialize('ScanTables63');

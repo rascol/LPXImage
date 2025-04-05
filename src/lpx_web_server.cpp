@@ -5,6 +5,7 @@
  */
 
 #include "../include/lpx_image.h"
+
 #include "../include/lpx_renderer.h"
 #include <opencv2/opencv.hpp>
 #include <iostream>

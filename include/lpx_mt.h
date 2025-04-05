@@ -27,6 +27,9 @@ namespace internal {
                         std::vector<int>& accR, std::vector<int>& accG, 
                         std::vector<int>& accB, std::vector<int>& count,
                         std::mutex& accMutex);
+    
+    // Helper function to calculate a scan bounding box
+    Rect getScannedBox(float x_center, float y_center, int width, int height, int length, float spiralPer, std::shared_ptr<LPXTables> sct);
 }
 
 } // namespace lpx

@@ -73,6 +73,17 @@
         "random": "cpp",
         "type_traits": "cpp",
         "utility": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "future": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp",
+        "unordered_set": "cpp",
+        "format": "cpp"
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Log-Polar Vision module
+ * Log-Polar Image module
  * Provides functions for converting standard images to log-polar format
  */
 

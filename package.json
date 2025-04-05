@@ -1,5 +1,5 @@
 {
-  "name": "log-polar-vision",
+  "name": "LPXImage",
   "version": "1.0.0",
   "description": "Log-polar image transformation for computer vision",
   "main": "index.js",

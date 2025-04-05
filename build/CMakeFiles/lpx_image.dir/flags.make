@@ -4,9 +4,9 @@
 # compile CXX with /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
 CXX_DEFINES = -Dlpx_image_EXPORTS
 
-CXX_INCLUDES = -I/Users/ray/Desktop/log-polar-vision/include -isystem /opt/homebrew/Cellar/opencv/4.11.0_1/include/opencv4
+CXX_INCLUDES = -I/Users/ray/Desktop/LPXImage/include -isystem /opt/homebrew/Cellar/opencv/4.11.0_1/include/opencv4
 
-CXX_FLAGSarm64 = -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fPIC
+CXX_FLAGSarm64 = -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -mmacosx-version-min=15.3 -fPIC
 
-CXX_FLAGS = -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk -fPIC
+CXX_FLAGS = -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -mmacosx-version-min=15.3 -fPIC
 

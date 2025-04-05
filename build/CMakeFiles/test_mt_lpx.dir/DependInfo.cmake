@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/ray/Desktop/log-polar-vision/src/test_mt_lpx.cpp" "CMakeFiles/test_mt_lpx.dir/src/test_mt_lpx.cpp.o" "gcc" "CMakeFiles/test_mt_lpx.dir/src/test_mt_lpx.cpp.o.d"
+  "/Users/ray/Desktop/LPXImage/src/test_mt_lpx.cpp" "CMakeFiles/test_mt_lpx.dir/src/test_mt_lpx.cpp.o" "gcc" "CMakeFiles/test_mt_lpx.dir/src/test_mt_lpx.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

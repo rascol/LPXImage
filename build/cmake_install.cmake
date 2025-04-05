@@ -1,4 +1,4 @@
-# Install script for directory: /Users/ray/Desktop/log-polar-vision
+# Install script for directory: /Users/ray/Desktop/LPXImage
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -38,30 +38,40 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/ray/Desktop/log-polar-vision/build_mt_fix/liblpx_image.dylib")
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.dylib" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.dylib")
-    execute_process(COMMAND /Users/ray/Anaconda/anaconda3/bin/install_name_tool
-      -delete_rpath "/opt/homebrew/lib"
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.dylib")
-    if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip" -x "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES
+    "/Users/ray/Desktop/LPXImage/build/liblpx_image.1.0.0.dylib"
+    "/Users/ray/Desktop/LPXImage/build/liblpx_image.1.dylib"
+    )
+  foreach(file
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.1.0.0.dylib"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/liblpx_image.1.dylib"
+      )
+    if(EXISTS "${file}" AND
+       NOT IS_SYMLINK "${file}")
+      execute_process(COMMAND /Users/ray/Anaconda/anaconda3/bin/install_name_tool
+        -delete_rpath "/opt/homebrew/lib"
+        "${file}")
+      if(CMAKE_INSTALL_DO_STRIP)
+        execute_process(COMMAND "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip" -x "${file}")
+      endif()
     endif()
-  endif()
+  endforeach()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/ray/Desktop/LPXImage/build/liblpx_image.dylib")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/lpx_image.dir/install-cxx-module-bmi-noconfig.cmake" OPTIONAL)
+  include("/Users/ray/Desktop/LPXImage/build/CMakeFiles/lpx_image.dir/install-cxx-module-bmi-noconfig.cmake" OPTIONAL)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE FILE FILES
-    "/Users/ray/Desktop/log-polar-vision/include/lpx_image.h"
-    "/Users/ray/Desktop/log-polar-vision/include/lpx_renderer.h"
-    "/Users/ray/Desktop/log-polar-vision/include/lpx_mt.h"
+    "/Users/ray/Desktop/LPXImage/include/lpx_image.h"
+    "/Users/ray/Desktop/LPXImage/include/lpx_renderer.h"
+    "/Users/ray/Desktop/LPXImage/include/lpx_mt.h"
+    "/Users/ray/Desktop/LPXImage/include/lpx_webcam_server.h"
     )
 endif()
 
@@ -80,6 +90,6 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-  file(WRITE "/Users/ray/Desktop/log-polar-vision/build_mt_fix/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/Users/ray/Desktop/LPXImage/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

@@ -1,0 +1,2 @@
+# Empty dependencies file for main_debug_renderer.
+# This may be replaced when dependencies are built.

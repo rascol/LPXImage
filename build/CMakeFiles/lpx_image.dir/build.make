@@ -53,10 +53,10 @@ RM = /opt/homebrew/Cellar/cmake/3.30.3/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/ray/Desktop/log-polar-vision
+CMAKE_SOURCE_DIR = /Users/ray/Desktop/LPXImage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/ray/Desktop/log-polar-vision/build_mt_fix
+CMAKE_BINARY_DIR = /Users/ray/Desktop/LPXImage/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/lpx_image.dir/depend.make
@@ -70,135 +70,91 @@ include CMakeFiles/lpx_image.dir/progress.make
 include CMakeFiles/lpx_image.dir/flags.make
 
 CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o: CMakeFiles/lpx_image.dir/flags.make
-CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o: /Users/ray/Desktop/log-polar-vision/src/lpx_globals.cpp
+CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o: /Users/ray/Desktop/LPXImage/src/lpx_globals.cpp
 CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o -MF CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o.d -o CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o -c /Users/ray/Desktop/log-polar-vision/src/lpx_globals.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o -MF CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o.d -o CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o -c /Users/ray/Desktop/LPXImage/src/lpx_globals.cpp
 
 CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/log-polar-vision/src/lpx_globals.cpp > CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/LPXImage/src/lpx_globals.cpp > CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.i
 
 CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/log-polar-vision/src/lpx_globals.cpp -o CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/LPXImage/src/lpx_globals.cpp -o CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.s
 
-CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o: CMakeFiles/lpx_image.dir/flags.make
-CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o: /Users/ray/Desktop/log-polar-vision/src/lpx_image.cpp
-CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o -MF CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o.d -o CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o -c /Users/ray/Desktop/log-polar-vision/src/lpx_image.cpp
+CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o: CMakeFiles/lpx_image.dir/flags.make
+CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o: /Users/ray/Desktop/LPXImage/src/mt_lpx_renderer.cpp
+CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o -MF CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o.d -o CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o -c /Users/ray/Desktop/LPXImage/src/mt_lpx_renderer.cpp
 
-CMakeFiles/lpx_image.dir/src/lpx_image.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/lpx_image.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/log-polar-vision/src/lpx_image.cpp > CMakeFiles/lpx_image.dir/src/lpx_image.cpp.i
+CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/LPXImage/src/mt_lpx_renderer.cpp > CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.i
 
-CMakeFiles/lpx_image.dir/src/lpx_image.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/lpx_image.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/log-polar-vision/src/lpx_image.cpp -o CMakeFiles/lpx_image.dir/src/lpx_image.cpp.s
-
-CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o: CMakeFiles/lpx_image.dir/flags.make
-CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o: /Users/ray/Desktop/log-polar-vision/src/lpx_renderer.cpp
-CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o -MF CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o.d -o CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o -c /Users/ray/Desktop/log-polar-vision/src/lpx_renderer.cpp
-
-CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/log-polar-vision/src/lpx_renderer.cpp > CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.i
-
-CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/log-polar-vision/src/lpx_renderer.cpp -o CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.s
+CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/LPXImage/src/mt_lpx_renderer.cpp -o CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.s
 
 CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o: CMakeFiles/lpx_image.dir/flags.make
-CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o: /Users/ray/Desktop/log-polar-vision/src/mt_lpx_image.cpp
+CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o: /Users/ray/Desktop/LPXImage/src/mt_lpx_image.cpp
 CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o -MF CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o.d -o CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o -c /Users/ray/Desktop/log-polar-vision/src/mt_lpx_image.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o -MF CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o.d -o CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o -c /Users/ray/Desktop/LPXImage/src/mt_lpx_image.cpp
 
 CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/log-polar-vision/src/mt_lpx_image.cpp > CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/LPXImage/src/mt_lpx_image.cpp > CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.i
 
 CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/log-polar-vision/src/mt_lpx_image.cpp -o CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/LPXImage/src/mt_lpx_image.cpp -o CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.s
+
+CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o: CMakeFiles/lpx_image.dir/flags.make
+CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o: /Users/ray/Desktop/LPXImage/src/lpx_logging.cpp
+CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o: CMakeFiles/lpx_image.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o -MF CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o.d -o CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o -c /Users/ray/Desktop/LPXImage/src/lpx_logging.cpp
+
+CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/ray/Desktop/LPXImage/src/lpx_logging.cpp > CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.i
+
+CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/ray/Desktop/LPXImage/src/lpx_logging.cpp -o CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.s
 
 # Object files for target lpx_image
 lpx_image_OBJECTS = \
 "CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o" \
-"CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o" \
-"CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o" \
-"CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o"
+"CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o" \
+"CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o" \
+"CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o"
 
 # External object files for target lpx_image
 lpx_image_EXTERNAL_OBJECTS =
 
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/src/lpx_image.cpp.o
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/src/lpx_renderer.cpp.o
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/build.make
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_gapi.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_stitching.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_alphamat.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_aruco.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_bgsegm.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_bioinspired.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_ccalib.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_dnn_objdetect.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_dnn_superres.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_dpm.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_face.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_freetype.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_fuzzy.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_hfs.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_img_hash.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_intensity_transform.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_line_descriptor.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_mcc.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_quality.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_rapid.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_reg.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_rgbd.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_saliency.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_sfm.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_signal.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_stereo.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_structured_light.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_superres.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_surface_matching.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_tracking.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_videostab.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_viz.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_wechat_qrcode.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_xfeatures2d.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_xobjdetect.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_xphoto.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_shape.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_highgui.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_datasets.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_plot.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_text.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_ml.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_phase_unwrapping.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_optflow.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_ximgproc.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_video.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_videoio.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_imgcodecs.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_objdetect.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_calib3d.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_dnn.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_features2d.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_flann.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_photo.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_imgproc.4.11.0.dylib
-liblpx_image.dylib: /opt/homebrew/lib/libopencv_core.4.11.0.dylib
-liblpx_image.dylib: CMakeFiles/lpx_image.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX shared library liblpx_image.dylib"
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/build.make
+liblpx_image.1.0.0.dylib: /opt/homebrew/lib/libopencv_highgui.4.11.0.dylib
+liblpx_image.1.0.0.dylib: /opt/homebrew/lib/libopencv_videoio.4.11.0.dylib
+liblpx_image.1.0.0.dylib: /opt/homebrew/lib/libopencv_imgcodecs.4.11.0.dylib
+liblpx_image.1.0.0.dylib: /opt/homebrew/lib/libopencv_imgproc.4.11.0.dylib
+liblpx_image.1.0.0.dylib: /opt/homebrew/lib/libopencv_core.4.11.0.dylib
+liblpx_image.1.0.0.dylib: CMakeFiles/lpx_image.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/ray/Desktop/LPXImage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX shared library liblpx_image.dylib"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lpx_image.dir/link.txt --verbose=$(VERBOSE)
+	$(CMAKE_COMMAND) -E cmake_symlink_library liblpx_image.1.0.0.dylib liblpx_image.1.dylib liblpx_image.dylib
+
+liblpx_image.1.dylib: liblpx_image.1.0.0.dylib
+	@$(CMAKE_COMMAND) -E touch_nocreate liblpx_image.1.dylib
+
+liblpx_image.dylib: liblpx_image.1.0.0.dylib
+	@$(CMAKE_COMMAND) -E touch_nocreate liblpx_image.dylib
 
 # Rule to build all files generated by this target.
 CMakeFiles/lpx_image.dir/build: liblpx_image.dylib
@@ -209,6 +165,6 @@ CMakeFiles/lpx_image.dir/clean:
 .PHONY : CMakeFiles/lpx_image.dir/clean
 
 CMakeFiles/lpx_image.dir/depend:
-	cd /Users/ray/Desktop/log-polar-vision/build_mt_fix && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/ray/Desktop/log-polar-vision /Users/ray/Desktop/log-polar-vision /Users/ray/Desktop/log-polar-vision/build_mt_fix /Users/ray/Desktop/log-polar-vision/build_mt_fix /Users/ray/Desktop/log-polar-vision/build_mt_fix/CMakeFiles/lpx_image.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /Users/ray/Desktop/LPXImage/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/ray/Desktop/LPXImage /Users/ray/Desktop/LPXImage /Users/ray/Desktop/LPXImage/build /Users/ray/Desktop/LPXImage/build /Users/ray/Desktop/LPXImage/build/CMakeFiles/lpx_image.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/lpx_image.dir/depend
 

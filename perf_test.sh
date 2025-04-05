@@ -118,7 +118,7 @@ target_link_libraries(perf_test \${OpenCV_LIBS})
 
 # Add library from parent project
 add_library(lpx_image SHARED IMPORTED)
-set_target_properties(lpx_image PROPERTIES IMPORTED_LOCATION ../build_mt_fix/liblpx_image.dylib)
+set_target_properties(lpx_image PROPERTIES IMPORTED_LOCATION ../build/liblpx_image.dylib)
 target_link_libraries(perf_test lpx_image)
 EOF
 

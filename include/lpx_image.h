@@ -94,7 +94,9 @@ public:
     int getHeight() const { return height; }
     float getXOffset() const { return x_ofs; }
     float getYOffset() const { return y_ofs; }
+    
     std::shared_ptr<LPXTables> getScanTables() const { return sct; }
+    
     void setLength(int len) { length = std::min(len, nMaxCells); }
     void setPosition(float x, float y) { x_ofs = x; y_ofs = y; }
     
@@ -106,11 +108,11 @@ public:
         static int debugCount = 0;
         if (index >= 0 && index < static_cast<int>(cellArray.size())) {
             // Add limited debug output for the first few fovea cells accessed
-            if (index < 20 && debugCount < 10) {
-                std::cout << "DEBUG: getCellValue - Cell " << index << " = 0x" 
-                          << std::hex << cellArray[index] << std::dec << std::endl;
-                debugCount++;
-            }
+            // if (index < 20 && debugCount < 10) {
+            //     std::cout << "DEBUG: getCellValue - Cell " << index << " = 0x" 
+            //               << std::hex << cellArray[index] << std::dec << std::endl;
+            //     debugCount++;
+            // }
             return cellArray[index];
         }
         return 0;
