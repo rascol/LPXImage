@@ -549,13 +549,25 @@ void LPXDebugClient::setWindowSize(int width, int height) {
 
 void LPXDebugClient::initializeWindow() {
     // Create window (must be called from main thread on macOS)
-    cv::namedWindow(windowTitle, cv::WINDOW_NORMAL);
+    cv::namedWindow(windowTitle, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::resizeWindow(windowTitle, windowWidth, windowHeight);
+    
+    // Create a black image to show initially
+    cv::Mat initialImage(windowHeight, windowWidth, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::putText(initialImage, "Waiting for LPX data...", cv::Point(windowWidth/4, windowHeight/2), 
+               cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
+    cv::imshow(windowTitle, initialImage);
+    cv::waitKey(1); // Force window update
 }
 
 bool LPXDebugClient::processEvents() {
     // Process UI events (must be called from main thread on macOS)
     int key = cv::waitKey(1);
+    // Log periodically that we're processing events
+    static int counter = 0;
+    if (++counter % 100 == 0) {
+        std::cout << "Main thread processing UI events..." << std::endl;
+    }
     if (key == 27) { // ESC key
         running = false;
         return false;
@@ -571,15 +583,23 @@ void LPXDebugClient::receiverThread() {
         auto image = LPXStreamProtocol::receiveLPXImage(clientSocket, scanTables);
         
         if (!image) {
-            std::cout << "Connection lost" << std::endl;
+            std::cout << "Connection lost or failed to receive image" << std::endl;
             running = false;
             break;
+        } else {
+            std::cout << "Received LPXImage with " << image->getLength() << " cells" << std::endl;
         }
         
         // Render the image using the existing multithreaded renderer
         auto startTime = std::chrono::high_resolution_clock::now();
         
         cv::Mat rendered = renderer->renderToImage(image, windowWidth, windowHeight, scale);
+        
+        if (rendered.empty()) {
+            std::cout << "Failed to render image" << std::endl;
+        } else {
+            std::cout << "Successfully rendered image: " << rendered.cols << "x" << rendered.rows << std::endl;
+        }
         
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -593,6 +613,7 @@ void LPXDebugClient::receiverThread() {
                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
             
             cv::imshow(windowTitle, rendered);
+            std::cout << "Displayed image in window: " << windowTitle << std::endl;
             
             // Don't check for key press here - it must be done from main thread
             // We'll handle this in the main thread instead
