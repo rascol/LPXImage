@@ -110,7 +110,7 @@ include_directories(\${OpenCV_INCLUDE_DIRS})
 # Include parent project
 include_directories(../include)
 
-# Add executable
+# Add executablegi
 add_executable(perf_test perf_test.cpp)
 
 # Link to the main library
