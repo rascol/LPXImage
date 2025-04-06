@@ -2,10 +2,12 @@
 #include "lpx_webcam_server.h"
 #include <iostream>
 #include <string>
+#include <thread>  // For std::this_thread::sleep_for
+#include <chrono>  // For std::chrono::milliseconds
 
 int main(int argc, char** argv) {
     // Default parameters
-    std::string scanTableFile = "../data/scan_tables.bin";
+    std::string scanTableFile = "../Scantables63";
     std::string serverAddress = "localhost";
     int port = 5050;
     
@@ -29,6 +31,9 @@ int main(int argc, char** argv) {
         client.setWindowSize(800, 600);
         client.setScale(1.0f);
         
+        // Initialize window first (must be done from main thread on macOS)
+        client.initializeWindow();
+        
         // Connect to server
         std::cout << "Connecting to " << serverAddress << ":" << port << std::endl;
         if (!client.connect(serverAddress, port)) {
@@ -41,8 +46,15 @@ int main(int argc, char** argv) {
         std::cout << "Press ESC in the video window to exit" << std::endl;
         
         // The client thread is already running and showing the window
-        // Just wait for user input to ensure the program doesn't exit immediately
-        std::cin.get();
+        // Process events on the main thread until user presses ESC or client disconnects
+        while (client.isRunning()) {
+            if (!client.processEvents()) {
+                break; // User pressed ESC
+            }
+            
+            // Brief sleep to avoid CPU burnout
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
         
         // Disconnect and clean up
         client.disconnect();

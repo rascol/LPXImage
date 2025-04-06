@@ -104,6 +104,15 @@ public:
     void setWindowSize(int width, int height);
     void setScale(float scale) { this->scale = scale; }
     
+    // Initialize UI (must be called from main thread on macOS)
+    void initializeWindow();
+    
+    // Process UI events (must be called from main thread on macOS)
+    bool processEvents();
+    
+    // Check if client is still running
+    bool isRunning() const { return running; }
+    
 private:
     void receiverThread();
     

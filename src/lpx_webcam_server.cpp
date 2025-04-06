@@ -547,9 +547,24 @@ void LPXDebugClient::setWindowSize(int width, int height) {
     windowHeight = height;
 }
 
-void LPXDebugClient::receiverThread() {
+void LPXDebugClient::initializeWindow() {
+    // Create window (must be called from main thread on macOS)
     cv::namedWindow(windowTitle, cv::WINDOW_NORMAL);
     cv::resizeWindow(windowTitle, windowWidth, windowHeight);
+}
+
+bool LPXDebugClient::processEvents() {
+    // Process UI events (must be called from main thread on macOS)
+    int key = cv::waitKey(1);
+    if (key == 27) { // ESC key
+        running = false;
+        return false;
+    }
+    return true;
+}
+
+void LPXDebugClient::receiverThread() {
+    // Window should already be initialized from main thread
     
     while (running) {
         // Receive an LPXImage
@@ -579,12 +594,8 @@ void LPXDebugClient::receiverThread() {
             
             cv::imshow(windowTitle, rendered);
             
-            // Check for key press
-            int key = cv::waitKey(1);
-            if (key == 27) { // ESC key
-                running = false;
-                break;
-            }
+            // Don't check for key press here - it must be done from main thread
+            // We'll handle this in the main thread instead
         }
     }
     
