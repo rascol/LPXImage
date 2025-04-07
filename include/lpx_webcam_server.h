@@ -134,6 +134,11 @@ private:
     int windowWidth = 800;
     int windowHeight = 600;
     float scale = 1.0f;
+    
+    // Shared image buffer for thread-safe display
+    std::mutex displayMutex;
+    cv::Mat latestImage;
+    bool newImageAvailable = false;
 };
 
 } // namespace lpx

@@ -89,6 +89,10 @@ target_link_libraries(main_debug_renderer
     pthread
 )
 
+# Add OpenCV test executable
+add_executable(test_opencv src/test_opencv.cpp)
+target_link_libraries(test_opencv ${OpenCV_LIBS})
+
 # Installation
 install(TARGETS lpx_image DESTINATION lib)
 install(FILES 

@@ -562,7 +562,19 @@ void LPXDebugClient::initializeWindow() {
 
 bool LPXDebugClient::processEvents() {
     // Process UI events (must be called from main thread on macOS)
-    int key = cv::waitKey(1);
+    // Use a shorter wait time and make sure we handle UI events aggressively
+    int key = cv::waitKey(5);  // Wait a bit longer - 5ms instead of 1ms
+    
+    // Display new image if available (from main thread only)
+    {
+        std::lock_guard<std::mutex> lock(displayMutex);
+        if (newImageAvailable && !latestImage.empty()) {
+            cv::imshow(windowTitle, latestImage);
+            newImageAvailable = false;
+            std::cout << "Main thread displayed new image" << std::endl;
+        }
+    }
+    
     // Log periodically that we're processing events
     static int counter = 0;
     if (++counter % 100 == 0) {
@@ -609,11 +621,18 @@ void LPXDebugClient::receiverThread() {
             // Display stats on the image
             std::string stats = "Render: " + std::to_string(duration) + "ms, Cells: " 
                                + std::to_string(image->getLength());
+            // Add stats to the rendered image
             cv::putText(rendered, stats, cv::Point(10, 20), 
                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
             
-            cv::imshow(windowTitle, rendered);
-            std::cout << "Displayed image in window: " << windowTitle << std::endl;
+            // Update shared buffer (threadsafe) for main thread to display
+            {
+                std::lock_guard<std::mutex> lock(displayMutex);
+                rendered.copyTo(latestImage);
+                newImageAvailable = true;
+            }
+            
+            std::cout << "Image ready for display" << std::endl;
             
             // Don't check for key press here - it must be done from main thread
             // We'll handle this in the main thread instead
