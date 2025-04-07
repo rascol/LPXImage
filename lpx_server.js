@@ -7,7 +7,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
-const lpx = require('./index');
+const lpx = require('./lpx_image');
 
 // Configuration
 const PORT = process.env.PORT || 3000;

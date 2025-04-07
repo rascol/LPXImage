@@ -34,6 +34,7 @@ add_library(lpx_image SHARED
     src/mt_lpx_renderer.cpp
     src/mt_lpx_image.cpp
     src/lpx_logging.cpp
+    src/lpx_webcam_server.cpp  # Added this file to the shared library
 )
 
 # This ensures that executable targets can see the symbols from the lpx_image library
@@ -60,31 +61,23 @@ target_link_libraries(test_mt_lpx PRIVATE lpx_image ${OpenCV_LIBS})
 
 # Add the webcam server executable
 add_executable(main_webcam_server 
-    src/main_webcam_server.cpp 
-    src/lpx_webcam_server.cpp
-    src/mt_lpx_image.cpp
-    src/mt_lpx_renderer.cpp
-    src/lpx_globals.cpp
-    src/lpx_logging.cpp
+    src/main_webcam_server.cpp
 )
 
 # Add the debug renderer executable
 add_executable(main_debug_renderer 
     src/main_debug_renderer.cpp
-    src/lpx_webcam_server.cpp
-    src/mt_lpx_image.cpp
-    src/mt_lpx_renderer.cpp
-    src/lpx_globals.cpp
-    src/lpx_logging.cpp
 )
 
 target_link_libraries(main_webcam_server 
+    lpx_image
     ${OpenCV_LIBS}
     pthread
 )
 
 # Link libraries for debug renderer
 target_link_libraries(main_debug_renderer
+    lpx_image
     ${OpenCV_LIBS}
     pthread
 )
