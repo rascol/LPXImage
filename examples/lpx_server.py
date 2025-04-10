@@ -2,12 +2,20 @@
 # lpx_server.py - Captures video, converts it to LPXImage format, and streams to clients
 import numpy as np
 import cv2
-import lpximage
 import time
 import threading
 import signal
 import sys
 import os
+import argparse
+
+try:
+    import lpximage
+except ModuleNotFoundError:
+    print("ERROR: lpximage module not found!")
+    print("Please ensure LPXImage is properly installed on this machine.")
+    print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
+    sys.exit(1)
 
 # Global variable for server
 server = None
@@ -31,35 +39,38 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='LPXImage Server - Stream video in LPXImage format')
+    parser.add_argument('--tables', default='../ScanTables63', help='Path to scan tables')
+    parser.add_argument('--camera', type=int, default=0, help='Camera ID')
+    parser.add_argument('--width', type=int, default=640, help='Video width')
+    parser.add_argument('--height', type=int, default=480, help='Video height')
+    parser.add_argument('--port', type=int, default=5050, help='Server port')
+    args = parser.parse_args()
+    
     # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)
     
-    # Parse command-line arguments (in a real application)
-    scan_tables_path = "../ScanTables63"  # Default path
-    camera_id = 0  # Default camera
-    width = 640  # Default width
-    height = 480  # Default height
-    port = 5050  # Default port
-    
     # Print startup info
     print(f"LPXImage Server - Converting and streaming video")
-    print(f"Camera ID: {camera_id}")
-    print(f"Resolution: {width}x{height}")
-    print(f"Scan Tables: {scan_tables_path}")
+    print(f"Camera ID: {args.camera}")
+    print(f"Resolution: {args.width}x{args.height}")
+    print(f"Scan Tables: {args.tables}")
+    print(f"Port: {args.port}")
     print("Press Ctrl+C to exit")
     
     # Create and start the LPX server
     global server
     try:
         # Initialize the server with scan tables
-        server = lpximage.WebcamLPXServer(scan_tables_path)
+        server = lpximage.WebcamLPXServer(args.tables)
         
         # Start the server with the specified camera and resolution
-        if not server.start(camera_id, width, height):
+        if not server.start(args.camera, args.width, args.height):
             print("Failed to start LPX server. Check camera connection.")
             return
         
-        print(f"Server started and listening on port {port}")
+        print(f"Server started and listening on port {args.port}")
         print("Waiting for clients to connect...")
         
         # Main server loop

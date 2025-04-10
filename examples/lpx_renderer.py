@@ -2,34 +2,48 @@
 # lpx_renderer.py - Receives LPXImage frames from server, renders them, and displays
 import numpy as np
 import cv2
-import lpximage
+
+try:
+    import lpximage
+except ModuleNotFoundError:
+    print("ERROR: lpximage module not found!")
+    print("Please ensure LPXImage is properly installed on this machine.")
+    print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
+    print("Typically you would need to:")
+    print("  1. Build the C++ library and Python bindings")
+    print("  2. Install the Python module with pip or add it to your PYTHONPATH")
+    import sys
+    sys.exit(1)
 import time
 import signal
 import sys
 import os
+import argparse
 
 def main():
-    # Parse command-line arguments (in a real application)
-    scan_tables_path = "../ScanTables63"  # Default path
-    server_host = "127.0.0.1"  # Default to localhost - change to server IP
-    window_width = 800  # Default display width
-    window_height = 600  # Default display height
-    scale = 1.0  # Default scaling factor
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='LPXImage Renderer - Receive and display LPXImage video')
+    parser.add_argument('--tables', default='../ScanTables63', help='Path to scan tables')
+    parser.add_argument('--host', default='127.0.0.1', help='Server hostname or IP address')
+    parser.add_argument('--width', type=int, default=800, help='Window width')
+    parser.add_argument('--height', type=int, default=600, help='Window height')
+    parser.add_argument('--scale', type=float, default=1.0, help='Rendering scale factor')
+    args = parser.parse_args()
     
     # Print startup info
     print(f"LPXImage Renderer - Receiving and displaying LPX video")
-    print(f"Connecting to: {server_host}")
-    print(f"Window size: {window_width}x{window_height}")
-    print(f"Scan Tables: {scan_tables_path}")
+    print(f"Connecting to: {args.host}")
+    print(f"Window size: {args.width}x{args.height}")
+    print(f"Scan Tables: {args.tables}")
     print("Press 'q' in the window or Ctrl+C in terminal to exit")
     
     # Create the LPX debug client
-    client = lpximage.LPXDebugClient(scan_tables_path)
+    client = lpximage.LPXDebugClient(args.tables)
     
     # Configure the display window
     client.setWindowTitle("LPX Remote Renderer")
-    client.setWindowSize(window_width, window_height)
-    client.setScale(scale)
+    client.setWindowSize(args.width, args.height)
+    client.setScale(args.scale)
     
     # Initialize the window (must be on main thread)
     client.initializeWindow()
@@ -51,9 +65,9 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     
     # Connect to the server
-    print(f"Connecting to LPX server at {server_host}...")
+    print(f"Connecting to LPX server at {args.host}...")
     try:
-        if not client.connect(server_host):
+        if not client.connect(args.host):
             print("Failed to connect to server. Check if server is running.")
             return
         
