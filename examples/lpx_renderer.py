@@ -50,9 +50,12 @@ def main():
     
     # Define a clean exit function
     def clean_exit():
-        if client.isConnected():
+        # Just call disconnect - the isConnected() method doesn't exist
+        try:
             client.disconnect()
             print("Disconnected from server")
+        except Exception as e:
+            print(f"Error disconnecting: {e}")
         cv2.destroyAllWindows()
         print("Renderer exiting...")
         sys.exit(0)
@@ -60,9 +63,13 @@ def main():
     # Set up signal handler for Ctrl+C
     def signal_handler(sig, frame):
         print("\nCtrl+C pressed, exiting...")
-        clean_exit()
+        print("Forcing immediate exit...")
+        # Skip any cleanup - just terminate immediately
+        os._exit(0)  # Immediately terminates the process without any cleanup
     
+    # Register signal handlers for various signals
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # Connect to the server
     print(f"Connecting to LPX server at {args.host}...")
@@ -85,8 +92,8 @@ def main():
             # Check for 'q' key press to exit
             key = cv2.waitKey(10) & 0xFF
             if key == ord('q'):
-                print("'q' key pressed, exiting...")
-                break
+                print("'q' key pressed, exiting forcefully...")
+                os._exit(0)  # Force immediate exit
             
             # Calculate and display FPS every second
             frame_count += 1
@@ -102,8 +109,9 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        # Clean up resources
-        clean_exit()
+        # Skip all cleanup and just exit forcefully
+        print("Exiting program forcefully...")
+        os._exit(0)  # Force immediate exit without any cleanup
 
 if __name__ == "__main__":
     main()
