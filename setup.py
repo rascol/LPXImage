@@ -44,6 +44,12 @@ class CMakeBuild(build_ext):
         # Platform-specific options
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
+        
+        # Add command to install C++ library alongside Python module
+        cmake_args += [
+            '-DCMAKE_INSTALL_PREFIX=' + extdir,
+            '-DCMAKE_INSTALL_LIBDIR=' + extdir
+        ]
 
         if platform.system() == "Windows":
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(

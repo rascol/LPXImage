@@ -162,6 +162,42 @@ cmake --build . --target uninstall
 
 ## Troubleshooting
 
+### Library Loading Issues on macOS
+
+If you encounter errors about missing libraries when importing the module, such as:
+
+```
+ImportError: dlopen(..., 0x0002): Library not loaded: @rpath/liblpx_image.1.dylib
+```
+
+There are several ways to fix this:
+
+1. **Use the fix_macos_paths.sh script** (Recommended)
+   ```bash
+   cd scripts
+   chmod +x fix_macos_paths.sh
+   ./fix_macos_paths.sh
+   ```
+   This script will automatically find and fix the library paths.
+
+2. **Set the DYLD_LIBRARY_PATH environment variable**
+   ```bash
+   # Find the library location
+   find /Users/ray/Desktop/LPXImage -name "liblpx_image*.dylib"
+   
+   # Set the environment variable
+   export DYLD_LIBRARY_PATH=/path/to/directory/containing/library:$DYLD_LIBRARY_PATH
+   ```
+
+3. **Rebuild with updated CMake settings**
+   ```bash
+   cd build
+   cmake .. -DBUILD_PYTHON_BINDINGS=ON -DPython_EXECUTABLE=$(which python)
+   make
+   sudo make install
+   ```
+   The updated CMakeLists.txt should now properly configure the library paths.
+
 ### Module Not Found Error
 
 If you encounter `ModuleNotFoundError: No module named 'lpximage'` after installation:

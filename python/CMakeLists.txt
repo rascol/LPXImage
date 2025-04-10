@@ -57,3 +57,11 @@ endif()
 
 # Install the module to the correct site-packages directory
 install(TARGETS lpximage DESTINATION "${PYTHON_SITE_PACKAGES}")
+
+# Also install the C++ library alongside the Python module
+# This ensures the Python module can find the library it depends on
+install(TARGETS lpx_image DESTINATION "${PYTHON_SITE_PACKAGES}")
+
+# Output installation paths for debugging
+message(STATUS "Python module will be installed to: ${PYTHON_SITE_PACKAGES}")
+message(STATUS "C++ library will be installed to: ${PYTHON_SITE_PACKAGES}")
