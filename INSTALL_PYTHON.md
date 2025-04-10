@@ -45,19 +45,27 @@ sudo apt install python3-dev
 sudo apt install git
 ```
 
+## Python Dependencies
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Building and Installing
 
-### macOS and Linux
+### Simple Build Process (All Platforms)
 
-1. First, clone the LPXImage repository if you haven't already:
+The simplified build process should work for most users:
 
+1. Clone the repository:
 ```bash
 git clone https://github.com/rascol/LPXImage.git
 cd LPXImage
 ```
 
 2. Create a build directory and run CMake:
-
 ```bash
 mkdir -p build
 cd build
@@ -65,50 +73,57 @@ cmake .. -DBUILD_PYTHON_BINDINGS=ON
 ```
 
 3. Build the library and Python module:
-
 ```bash
+# macOS/Linux
 make
-```
 
-4. Install the Python module (may require administrator privileges):
-
-```bash
-make install
-```
-
-   Or, to install for the current user only:
-
-```bash
-make install DESTDIR=~/.local
-```
-
-### Windows
-
-1. First, clone the LPXImage repository if you haven't already:
-
-```batch
-git clone https://github.com/rascol/LPXImage.git
-cd LPXImage
-```
-
-2. Create a build directory and run CMake:
-
-```batch
-mkdir build
-cd build
-cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_PYTHON_BINDINGS=ON
-```
-
-3. Build the library and Python module:
-
-```batch
+# Windows
 cmake --build . --config Release
 ```
 
 4. Install the Python module:
+```bash
+# macOS/Linux
+sudo make install
 
-```batch
+# Windows
 cmake --install . --config Release
+```
+
+5. Verify the installation:
+```bash
+python -c "import lpximage; print('Module successfully imported!')"
+```
+
+### Platform-Specific Options
+
+#### macOS Advanced Options
+
+For macOS, you may want to use additional options to ensure proper library loading:
+
+```bash
+cmake .. -DBUILD_PYTHON_BINDINGS=ON \
+         -DPython_EXECUTABLE=$(which python) \
+         -DCMAKE_INSTALL_RPATH="/usr/local/lib" \
+         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+         -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON \
+         -DCMAKE_MACOSX_RPATH=ON
+```
+
+#### Virtual Environment Installation
+
+When using a Python virtual environment, you may want to install without sudo:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+mkdir -p build
+cd build
+cmake .. -DBUILD_PYTHON_BINDINGS=ON -DPython_EXECUTABLE=$(which python)
+make
+make install  # No sudo needed for virtual environments
 ```
 
 ## Uninstalling and Cleaning
@@ -145,71 +160,92 @@ cd build
 cmake --build . --target uninstall
 ```
 
-## Verifying the Installation
+## Troubleshooting
 
-To verify that the Python module was correctly installed, run Python and try to import it:
+### Module Not Found Error
 
-```python
-import lpximage
-print(lpximage.__doc__)
-```
+If you encounter `ModuleNotFoundError: No module named 'lpximage'` after installation:
 
-You should see the documentation string: "Python bindings for LPX Image Processing Library"
+1. Verify the module was installed by finding it:
+   ```bash
+   # macOS/Linux
+   find /usr /usr/local /opt -name "lpximage*.so" 2>/dev/null
+   
+   # Windows
+   dir /s C:\Python*\Lib\site-packages\lpximage*
+   ```
 
-## Running the Example
+2. Check your Python paths:
+   ```python
+   import sys
+   print(sys.path)
+   ```
 
-The LPXImage package includes an example script that demonstrates how to use the library. To run it:
+3. Temporarily add the directory containing the module to your Python path:
+   ```bash
+   # macOS/Linux
+   export PYTHONPATH=$PYTHONPATH:/path/to/directory/containing/module
+   
+   # Windows
+   set PYTHONPATH=%PYTHONPATH%;C:\path\to\directory\containing\module
+   ```
+
+### Build Errors
+
+1. **Missing pybind11**: If you encounter errors related to pybind11, try installing it manually:
+   ```bash
+   pip install pybind11
+   ```
+
+2. **OpenCV Not Found**: Ensure OpenCV is installed with development headers:
+   ```bash
+   # macOS
+   brew install opencv
+   
+   # Ubuntu/Debian
+   sudo apt install libopencv-dev
+   ```
+
+3. **Incorrect Python Version**: Make sure CMake is using the intended Python version:
+   ```bash
+   cmake .. -DBUILD_PYTHON_BINDINGS=ON -DPython_EXECUTABLE=$(which python)
+   ```
+
+### Missing Dependencies at Runtime
+
+If you encounter errors about missing libraries when importing the module:
+
+1. Check if all dependencies are installed:
+   ```bash
+   # macOS
+   otool -L /path/to/lpximage.so
+   
+   # Linux
+   ldd /path/to/lpximage.so
+   
+   # Windows
+   dumpbin /dependents C:\path\to\lpximage.pyd
+   ```
+
+2. Install any missing libraries and ensure they're in your library path
+
+## Next Steps
+
+After installation, try running the example scripts in the `examples` directory:
 
 ```bash
 cd examples
 python lpx_demo.py
 ```
 
-Make sure you have a sample image named "sample_image.jpg" in the current directory, or modify the script to use a different image.
-
-## Troubleshooting
-
-### Module Not Found
-
-If Python cannot find the module, you may need to add the installation directory to your Python path:
+For more advanced usage, try the streaming examples:
 
 ```bash
-export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python3.x/site-packages
+# On the server computer
+python lpx_server.py
+
+# On the client computer
+python lpx_renderer.py --host SERVER_IP_ADDRESS
 ```
 
-Replace "python3.x" with your Python version.
-
-### Missing Dependencies
-
-If you encounter errors about missing libraries when importing the module, make sure all dependencies (especially OpenCV) are correctly installed and in your library path.
-
-### Build Errors
-
-If you encounter build errors related to pybind11, try installing it manually:
-
-```bash
-pip install pybind11
-```
-
-Then modify the CMakeLists.txt in the python directory to use the installed version:
-
-```cmake
-find_package(pybind11 REQUIRED)
-```
-
-## Using with Virtual Environments
-
-It's often best to use Python virtual environments to avoid conflicts between different projects:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install opencv-python numpy
-# Build and install as above
-```
-
-## Next Steps
-
-After installation, refer to the Python API documentation in `python/README.md` for detailed information on how to use the library from Python.
-
-For integration with other Python libraries and custom applications, refer to the Python API documentation in `python/README.md`.
+Refer to the Python API documentation in `python/README.md` for detailed information on how to use the library.

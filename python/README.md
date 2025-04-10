@@ -1,233 +1,257 @@
-# LPXImage Python API
+# LPXImage Python API Documentation
 
-This document provides documentation for the Python bindings to the LPXImage C++ library. These bindings allow you to use the high-performance log-polar image processing capabilities of LPXImage directly from Python.
+This document provides detailed information about the Python API for the LPXImage library, which allows you to perform log-polar image transformations and stream processing in Python.
 
 ## Installation
 
-To build and install the Python bindings:
+See the main [INSTALL_PYTHON.md](../INSTALL_PYTHON.md) file for installation instructions.
 
-```bash
-# From the LPXImage root directory
-mkdir -p build
-cd build
-cmake .. -DBUILD_PYTHON_BINDINGS=ON
-make
-make install  # May require sudo depending on your Python installation
-```
-
-## Quick Start
-
-```python
-import numpy as np
-import cv2
-import lpximage
-
-# Load an image
-img = cv2.imread("sample_image.jpg")
-img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-# Initialize scan tables
-tables = lpximage.LPXTables("path/to/ScanTables63")
-if tables.isInitialized():
-    print(f"Spiral period: {tables.spiralPer}")
-
-# Process the image using LPX
-center_x = img.shape[1] / 2
-center_y = img.shape[0] / 2
-lpx_image = lpximage.scanImage(img_rgb, center_x, center_y)
-
-# Render the image back to standard format
-renderer = lpximage.LPXRenderer()
-renderer.setScanTables(tables)
-rendered = renderer.renderToImage(lpx_image, 800, 600, 1.0)
-
-# Display the result
-cv2.imshow("LPX Rendered", cv2.cvtColor(rendered, cv2.COLOR_RGB2BGR))
-cv2.waitKey(0)
-```
-
-## API Reference
+## Core Components
 
 ### LPXTables
 
-Represents the scan tables that define the log-polar mapping.
-
-#### Constructor
+The `LPXTables` class handles the scan tables that define the mapping between standard image coordinates and log-polar coordinates.
 
 ```python
-tables = lpximage.LPXTables(scan_table_file)
+# Initialize scan tables
+tables = lpximage.LPXTables("path/to/ScanTables63")
+
+# Check if initialization was successful
+if not tables.isInitialized():
+    print("Failed to initialize scan tables")
+    
+# Access properties
+print(f"Spiral period: {tables.spiralPer}")
+print(f"Cells per ring: {tables.cellsPerRing}")
+print(f"Rings count: {tables.ringsCount}")
 ```
-
-- `scan_table_file`: Path to the scan tables file
-
-#### Methods
-
-- `isInitialized()`: Returns True if the tables were successfully initialized
-- `printInfo()`: Prints detailed information about the scan tables
-
-#### Properties
-
-- `spiralPer`: The spiral period in cells per revolution
-- `length`: Length of the scan table arrays
 
 ### LPXImage
 
-Represents an image in log-polar format.
-
-#### Constructor
+The `LPXImage` class represents a log-polar transformed image.
 
 ```python
-image = lpximage.LPXImage(tables, width, height)
+# Get an LPXImage from scanning a standard image
+lpx_image = lpximage.scanImage(img_rgb, center_x, center_y)
+
+# Get properties
+cell_count = lpx_image.getLength()
 ```
-
-- `tables`: A shared pointer to an LPXTables object
-- `width`: The width of the original image
-- `height`: The height of the original image
-
-#### Methods
-
-- `getWidth()`: Get the width of the original image
-- `getHeight()`: Get the height of the original image
-- `getLength()`: Get the number of cells in the log-polar representation
-- `getMaxCells()`: Get the maximum number of cells allowed
-- `getSpiralPeriod()`: Get the spiral period
-- `getXOffset()`: Get the X offset of the center point
-- `getYOffset()`: Get the Y offset of the center point
-- `setPosition(x, y)`: Set the position of the center point
-- `saveToFile(filename)`: Save the LPXImage to a file
-- `loadFromFile(filename)`: Load an LPXImage from a file
 
 ### LPXRenderer
 
-Renders LPXImage objects back to standard image format.
-
-#### Constructor
+The `LPXRenderer` class renders LPXImage objects back to standard images.
 
 ```python
+# Initialize renderer
 renderer = lpximage.LPXRenderer()
+renderer.setScanTables(tables)
+
+# Render a log-polar image to a standard RGB image
+# Parameters: lpx_image, width, height, scale
+standard_img = renderer.renderToImage(lpx_image, 800, 600, 1.0)
 ```
 
-#### Methods
-
-- `setScanTables(tables)`: Set the scan tables to use for rendering
-- `renderToImage(lpx_image, width, height, scale)`: Render an LPXImage to a numpy array
-  - `lpx_image`: The LPXImage to render
-  - `width`: The width of the output image
-  - `height`: The height of the output image
-  - `scale`: Scale factor for rendering
-  - Returns: A numpy array containing the rendered image
-
-### Global Functions
-
-- `scanImage(image, centerX, centerY)`: Convert a standard image to an LPXImage
-  - `image`: A numpy array containing the image (RGB format)
-  - `centerX`: X coordinate of the center point
-  - `centerY`: Y coordinate of the center point
-  - Returns: An LPXImage object
+## Streaming Components
 
 ### WebcamLPXServer
 
-A server that captures webcam images and converts them to LPXImage format for clients.
-
-#### Constructor
+The `WebcamLPXServer` class captures video from a webcam, converts it to log-polar format, and streams it to clients.
 
 ```python
-server = lpximage.WebcamLPXServer(scan_table_file, port=5050)
+# Create server with scan tables
+server = lpximage.WebcamLPXServer("path/to/ScanTables63")
+
+# Start the server
+# Parameters: camera_id, width, height
+if not server.start(0, 640, 480):
+    print("Failed to start server")
+    
+# Check client count
+clients = server.getClientCount()
+
+# Stop the server when done
+server.stop()
 ```
-
-- `scan_table_file`: Path to the scan tables file
-- `port`: Port to listen on (default: 5050)
-
-#### Methods
-
-- `start(cameraId=0, width=640, height=480)`: Start the server
-  - `cameraId`: ID of the camera to use
-  - `width`: Width of the captured frames
-  - `height`: Height of the captured frames
-- `stop()`: Stop the server
-- `setSkipRate(min, max, motionThreshold=5.0)`: Set the frame skip rate
-  - `min`: Minimum skip rate
-  - `max`: Maximum skip rate
-  - `motionThreshold`: Motion threshold for adaptive skipping
-- `getClientCount()`: Get the number of connected clients
 
 ### LPXDebugClient
 
-A client that connects to a WebcamLPXServer and displays the received images.
-
-#### Constructor
+The `LPXDebugClient` class receives log-polar image streams and displays them.
 
 ```python
-client = lpximage.LPXDebugClient(scan_table_file)
-```
-
-- `scan_table_file`: Path to the scan tables file
-
-#### Methods
-
-- `connect(serverAddress, port=5050)`: Connect to a server
-  - `serverAddress`: Address of the server
-  - `port`: Port to connect to
-- `disconnect()`: Disconnect from the server
-- `setWindowTitle(title)`: Set the window title
-- `setWindowSize(width, height)`: Set the window size
-- `setScale(scale)`: Set the rendering scale
-- `initializeWindow()`: Initialize the display window (must be called from main thread)
-- `processEvents()`: Process UI events (must be called from main thread)
-- `isRunning()`: Check if the client is still running
-
-## Performance Tips
-
-1. Use the `scanImage` function for best performance, as it leverages the multithreaded C++ implementation.
-2. Reuse LPXTables and LPXRenderer objects to avoid initialization overhead.
-3. For real-time applications, consider using the WebcamLPXServer/LPXDebugClient approach to offload processing to a separate thread or machine.
-
-When using the LPXDebugClient in Python, it's important to ensure all UI operations occur on the main thread. Here's the recommended pattern:
-
-```python
-import lpximage
-import threading
-import time
-
-def run_server():
-    server = lpximage.WebcamLPXServer("path/to/ScanTables63")
-    server.start()
-    # Keep the server running
-    while True:
-        time.sleep(1)
-        if some_condition:
-            break
-    server.stop()
-
-# Start server in a background thread
-server_thread = threading.Thread(target=run_server)
-server_thread.daemon = True
-server_thread.start()
-
-# Client on main thread
+# Create client with scan tables
 client = lpximage.LPXDebugClient("path/to/ScanTables63")
+
+# Configure display window
+client.setWindowTitle("LPX Stream")
 client.setWindowSize(800, 600)
-client.initializeWindow()  # Must be on main thread
-client.connect("localhost")
+client.setScale(1.0)
 
-# Event loop on main thread
+# Initialize window (must be done on main thread)
+client.initializeWindow()
+
+# Connect to a server
+if not client.connect("localhost"):
+    print("Failed to connect to server")
+    
+# Process events in a loop
 while client.isRunning():
-    client.processEvents()  # Must be on main thread
-    time.sleep(0.01)
-
+    if not client.processEvents():
+        break
+    # Optional: Check for key presses to exit
+    key = cv2.waitKey(10) & 0xFF
+    if key == ord('q'):
+        break
+    
+# Disconnect when done
 client.disconnect()
 ```
 
-## Performance Tips
+## Utility Functions
 
-1. Use the `scanImage` function for best performance, as it leverages the multithreaded C++ implementation.
-2. Reuse LPXTables and LPXRenderer objects to avoid initialization overhead.
-3. For real-time applications, consider using the WebcamLPXServer/LPXDebugClient approach to offload processing to a separate thread or machine.
+### initLPX
+
+Initializes the LPX system with scan tables and dimensions.
+
+```python
+# Initialize LPX system
+if not lpximage.initLPX("path/to/ScanTables63", width, height):
+    print("Failed to initialize LPX system")
+```
+
+### scanImage
+
+Converts a standard image to log-polar format.
+
+```python
+# Convert BGR to RGB
+img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+# Center of the image
+center_x = img.shape[1] / 2
+center_y = img.shape[0] / 2
+
+# Scan the image to create an LPXImage
+lpx_image = lpximage.scanImage(img_rgb, center_x, center_y)
+```
+
+## Examples
+
+### Basic Image Transformation
+
+```python
+import cv2
+import numpy as np
+import lpximage
+
+# Load an image
+img = cv2.imread("input.jpg")
+if img is None:
+    print("Failed to load image")
+    exit(1)
+
+# Convert BGR to RGB for processing
+img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+# Initialize the LPX system
+if not lpximage.initLPX("ScanTables63", img.shape[1], img.shape[0]):
+    print("Failed to initialize LPX system")
+    exit(1)
+
+# Define center point (usually the center of the image)
+center_x = img.shape[1] / 2
+center_y = img.shape[0] / 2
+
+# Convert to log-polar
+lpx_image = lpximage.scanImage(img_rgb, center_x, center_y)
+print(f"Created LPX image with {lpx_image.getLength()} cells")
+
+# Initialize renderer
+renderer = lpximage.LPXRenderer()
+renderer.setScanTables(lpximage.LPXTables("ScanTables63"))
+
+# Render back to standard format
+rendered = renderer.renderToImage(lpx_image, 800, 600, 1.0)
+
+# Convert back to BGR for display with OpenCV
+result_bgr = cv2.cvtColor(rendered, cv2.COLOR_RGB2BGR)
+
+# Display the result
+cv2.imshow("Original", img)
+cv2.imshow("Log-Polar Rendered", result_bgr)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+```
+
+### Streaming Video between Computers
+
+See the example scripts in the examples directory:
+- `lpx_server.py`: Runs on the server computer to capture and stream video
+- `lpx_renderer.py`: Runs on the client computer to display the streamed video
+
+These scripts demonstrate how to set up cross-computer streaming of log-polar processed video.
+
+## Handling Errors
+
+Most methods in the API return boolean values to indicate success or failure. Always check these return values:
+
+```python
+# Example of proper error handling
+if not client.connect("localhost"):
+    print("Failed to connect to server")
+    # Handle the error appropriately
+    return
+
+# When starting the server
+if not server.start(camera_id, width, height):
+    print("Failed to start server")
+    # Handle the error appropriately
+    return
+```
+
+## Thread Safety
+
+- The `WebcamLPXServer` class is designed to run in a background thread
+- The `LPXDebugClient.processEvents()` method must be called from the main thread (especially on macOS)
+- Always use proper thread synchronization when accessing shared resources
+
+## Best Practices
+
+1. Always check return values for functions that can fail
+2. Initialize windows on the main thread when using `LPXDebugClient`
+3. Use thread-safe patterns when working with the server in a multi-threaded context
+4. Close resources properly when you're done with them
+5. Add appropriate error handling for network operations
 
 ## Troubleshooting
 
-Common issues and solutions:
+### Module Import Issues
 
-- **ImportError: No module named lpximage**: Make sure the module is installed in your Python path or set the PYTHONPATH environment variable.
-- **Missing ScanTables**: Ensure the ScanTables63 directory is correctly specified.
-- **UI Thread Issues**: Remember that all OpenCV window operations must be performed on the main thread.
+If you encounter `ModuleNotFoundError: No module named 'lpximage'`:
+
+1. Verify the module was installed correctly
+2. Check your Python paths
+3. Try reinstalling the module
+4. See the [INSTALL_PYTHON.md](../INSTALL_PYTHON.md) file for more details
+
+### Connection Issues
+
+If the client cannot connect to the server:
+
+1. Verify the server is running
+2. Check network connectivity between machines
+3. Ensure firewalls are not blocking the connection
+4. Try using the IP address instead of hostname
+
+### Video Capture Issues
+
+If the server fails to start:
+
+1. Verify the camera is connected and working
+2. Try a different camera ID
+3. Check if the camera supports the requested resolution
+4. Ensure no other application is using the camera
+
+## Version Compatibility
+
+This documentation is for lpximage version 0.1.0 and higher.

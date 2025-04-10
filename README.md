@@ -16,9 +16,11 @@ This is a cross-platform implementation of the log-polar image transformation fo
 - OpenCV 4.x
 - Python 3.6+ (for Python integration)
 
-## Building
+## Installation
 
-### macOS/Linux
+### C++ Library
+
+#### macOS/Linux
 ```bash
 # Create build directory
 mkdir -p build
@@ -27,14 +29,9 @@ cd build
 # Build the C++ library
 cmake ..
 make
-
-# To also build Python bindings
-cmake .. -DBUILD_PYTHON_BINDINGS=ON
-make
-make install  # May require sudo depending on your Python installation
 ```
 
-### Windows
+#### Windows
 ```batch
 # Create build directory
 mkdir build
@@ -43,14 +40,58 @@ cd build
 # Build the C++ library
 cmake .. -G "Visual Studio 17 2022" -A x64
 cmake --build . --config Release
+```
 
-# To also build Python bindings
-cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_PYTHON_BINDINGS=ON
-cmake --build . --config Release
-cmake --install . --config Release
+### Python Bindings
+
+#### Quick Install (All Platforms)
+
+```bash
+# Install with pip directly from the repository
+pip install git+https://github.com/rascol/LPXImage.git
+```
+
+#### Manual Build and Install
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Configure with Python bindings enabled
+cmake .. -DBUILD_PYTHON_BINDINGS=ON
+
+# Build and install
+make
+sudo make install  # May require sudo depending on your Python installation
 ```
 
 For detailed Python installation instructions, see [INSTALL_PYTHON.md](INSTALL_PYTHON.md).
+
+## Cross-Computer Streaming
+
+LPXImage includes support for streaming log-polar processed video between different computers.
+
+### Server Computer
+
+```bash
+# Run the server (captures video and streams LPXImage frames)
+python examples/lpx_server.py
+
+# Options are available for camera selection and resolution
+python examples/lpx_server.py --camera 0 --width 640 --height 480
+```
+
+### Client Computer
+
+```bash
+# Run the renderer (receives and displays LPXImage frames)
+python examples/lpx_renderer.py --host SERVER_IP_ADDRESS
+
+# Options are available for window size and scaling
+python examples/lpx_renderer.py --host SERVER_IP_ADDRESS --width 800 --height 600 --scale 1.0
+```
+
+See the [Streaming Demo README](examples/README_STREAMING.md) for detailed instructions on cross-computer streaming.
 
 ## Cleaning and Uninstalling
 
