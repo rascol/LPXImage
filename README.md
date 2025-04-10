@@ -3,95 +3,177 @@ This is a cross-platform implementation of the log-polar image transformation fo
 
 ## Features
 
-- Convert standard images/video to log-polar format
+- Convert streaming video to log-polar format in real-time
+- Stream processed images over network connections
 - Convert log-polar images back to standard format for visualization
-- Stream processed images via WebSocket
+- High-performance multithreaded C++ core with Python bindings
 - Cross-platform support (macOS, Linux, Windows)
-- Node.js native addon for integration with web applications
 
 ## Requirements
 
 - CMake 3.10+
 - C++14 compatible compiler
 - OpenCV 4.x
-- Node.js 14+ (for Node.js integration)
+- Python 3.6+ (for Python integration)
 
-## Building the C++ Library
+## Building
 
+### macOS/Linux
 ```bash
-mkdir build
+# Create build directory
+mkdir -p build
 cd build
+
+# Build the C++ library
 cmake ..
 make
+
+# To also build Python bindings
+cmake .. -DBUILD_PYTHON_BINDINGS=ON
+make
+make install  # May require sudo depending on your Python installation
 ```
 
-## Installing the Node.js Module
+### Windows
+```batch
+# Create build directory
+mkdir build
+cd build
+
+# Build the C++ library
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+
+# To also build Python bindings
+cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_PYTHON_BINDINGS=ON
+cmake --build . --config Release
+cmake --install . --config Release
+```
+
+For detailed Python installation instructions, see [INSTALL_PYTHON.md](INSTALL_PYTHON.md).
+
+## Cleaning and Uninstalling
+
+To clean both build artifacts and installed files:
 
 ```bash
-npm install
+# For macOS/Linux
+cd build
+make cleanall
+
+# For Windows
+cd build
+cmake --build . --target cleanall
 ```
 
-## Running the Web Server
+To only uninstall without cleaning build artifacts:
 
 ```bash
-node server.js
+cd build
+make uninstall
 ```
-
-Then open your browser to http://localhost:3000 to see the log-polar stream.
 
 ## Usage from C++
 
 ```cpp
-#include "lpx_image.h"
-#include <opencv2/opencv.hpp>
+#include "lpx_webcam_server.h"
+#include <iostream>
 
 int main() {
-    // Initialize
-    lpx::initLPX("ScanTables63", 640, 480);
+    // Create the webcam server with scan tables
+    lpx::WebcamLPXServer server("ScanTables63");
     
-    // Load an image
-    cv::Mat image = cv::imread("input.jpg");
+    // Start capturing from webcam (camera ID, width, height)
+    if (!server.start(0, 640, 480)) {
+        std::cerr << "Failed to start webcam server" << std::endl;
+        return 1;
+    }
     
-    // Convert to log-polar
-    auto lpxImage = lpx::scanImage(image, image.cols/2, image.rows/2);
+    std::cout << "Server running. Press Enter to stop..." << std::endl;
+    std::cin.get();
     
-    // Save
-    lpxImage->saveToFile("output.lpx");
+    // Stop the server
+    server.stop();
     
-    // Render for visualization
-    cv::Mat rendered = lpxImage->renderToImage(640, 480);
-    cv::imwrite("rendered.jpg", rendered);
-    
-    // Cleanup
-    lpx::shutdownLPX();
     return 0;
 }
 ```
 
-## Usage from Node.js
+## Usage from Python
 
-```javascript
-const lpx = require('LPXImage');
+```python
+import lpximage
+import threading
+import time
+import cv2
+import numpy as np
 
-// Initialize
-lpx.initialize('ScanTables63');
+# Function to run the webcam server in a background thread
+def run_server():
+    # Create the webcam server
+    server = lpximage.WebcamLPXServer("ScanTables63")
+    
+    # Start the server (camera ID, width, height)
+    if not server.start(0, 640, 480):
+        print("Failed to start server")
+        return
+    
+    print("Server started. Processing video stream...")
+    
+    # Keep the server running for 60 seconds
+    time.sleep(60)
+    
+    # Stop the server
+    server.stop()
+    print("Server stopped")
 
-// Start camera
-lpx.startCamera(0);
+# Function to run the client that displays the log-polar processed stream
+def run_client():
+    # Create the client
+    client = lpximage.LPXDebugClient("ScanTables63")
+    
+    # Configure the client
+    client.setWindowTitle("Log-Polar Video Stream")
+    client.setWindowSize(800, 600)
+    client.setScale(1.0)
+    
+    # Initialize the display window (must be on main thread for macOS)
+    client.initializeWindow()
+    
+    # Connect to the server
+    if not client.connect("localhost"):
+        print("Failed to connect to server")
+        return
+    
+    print("Connected to server, receiving video stream...")
+    
+    # Process events on main thread
+    while client.isRunning():
+        # Process UI events and update display
+        if not client.processEvents():
+            break
+        time.sleep(0.01)
+    
+    # Disconnect when done
+    client.disconnect()
 
-// Capture and convert frame
-const lpxData = lpx.captureFrame(0.5, 0.5);
+# Start the server in a background thread
+server_thread = threading.Thread(target=run_server)
+server_thread.daemon = True
+server_thread.start()
 
-// Save to file
-lpx.saveLogPolarData(lpxData, 'output.lpx');
+# Give the server a moment to start
+time.sleep(1)
 
-// Render for visualization
-const jpegData = lpx.renderLogPolarImage(lpxData, 640, 480);
-
-// Clean up
-lpx.stopCamera();
-lpx.shutdown();
+# Run the client on the main thread
+run_client()
 ```
+
+For complete Python API documentation, see [python/README.md](python/README.md).
+
+## Future Development
+
+This LPXImage module focuses solely on the log-polar transformation of video streams. Future modules (like LPXVision) will build upon this foundation to integrate with neural networks and other advanced vision processing systems.
 
 ## Scan Tables
 
@@ -105,7 +187,5 @@ Copyright (c) 2025 Raymond S. Connell, Jr.
 This software is dual-licensed:
  - Free for non-commercial and open-source use
  - Commercial use requires a paid license
- 
-The log-polar algorithms are patent pending.
  
 See LICENSE.md for full terms.

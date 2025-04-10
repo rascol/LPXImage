@@ -86,6 +86,31 @@ target_link_libraries(main_debug_renderer
 add_executable(test_opencv src/test_opencv.cpp)
 target_link_libraries(test_opencv ${OpenCV_LIBS})
 
+# Option to build Python bindings
+option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
+
+if(BUILD_PYTHON_BINDINGS)
+    # Add the python subdirectory
+    add_subdirectory(python)
+endif()
+
+# Configure enhanced clean script that also uninstalls
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clean.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_clean.cmake"
+  IMMEDIATE @ONLY)
+
+# Add a custom target that runs after 'make clean' to also uninstall
+add_custom_target(cleanall
+  COMMAND ${CMAKE_MAKE_PROGRAM} clean
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_clean.cmake
+  COMMENT "Cleaning build and installed files...")
+
+# Also provide a separate uninstall target for convenience
+add_custom_target(uninstall
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_clean.cmake
+  COMMENT "Uninstalling files...")
+
 # Installation
 install(TARGETS lpx_image DESTINATION lib)
 install(FILES 
