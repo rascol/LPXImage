@@ -52,7 +52,6 @@ Options:
 ## Terminating the Programs
 
 - On both computers, press Ctrl+C in the terminal to stop the program
-- On the client computer, you can also press 'q' in the video window to exit
 
 ## Troubleshooting
 

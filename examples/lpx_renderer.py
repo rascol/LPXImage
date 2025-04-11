@@ -35,7 +35,7 @@ def main():
     print(f"Connecting to: {args.host}")
     print(f"Window size: {args.width}x{args.height}")
     print(f"Scan Tables: {args.tables}")
-    print("Press 'q' in the window or Ctrl+C in terminal to exit")
+    print("Press Ctrl+C in terminal to exit")
     
     # Create the LPX debug client
     client = lpximage.LPXDebugClient(args.tables)
@@ -88,12 +88,6 @@ def main():
             # Process events and update display
             if not client.processEvents():
                 break
-            
-            # Check for 'q' key press to exit
-            key = cv2.waitKey(10) & 0xFF
-            if key == ord('q'):
-                print("'q' key pressed, exiting forcefully...")
-                os._exit(0)  # Force immediate exit
             
             # Calculate and display FPS every second
             frame_count += 1

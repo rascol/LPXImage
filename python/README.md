@@ -98,10 +98,6 @@ if not client.connect("localhost"):
 while client.isRunning():
     if not client.processEvents():
         break
-    # Optional: Check for key presses to exit
-    key = cv2.waitKey(10) & 0xFF
-    if key == ord('q'):
-        break
     
 # Disconnect when done
 client.disconnect()
