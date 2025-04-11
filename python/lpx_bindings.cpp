@@ -12,6 +12,7 @@
 #include "../include/lpx_renderer.h"
 #include "../include/lpx_mt.h"
 #include "../include/lpx_webcam_server.h"
+#include "../include/lpx_file_server.h"  // Include file server header
 #include <opencv2/opencv.hpp>
 
 namespace py = pybind11;
@@ -113,6 +114,21 @@ PYBIND11_MODULE(lpximage, m) {
         .def("stop", &lpx::WebcamLPXServer::stop)
         .def("setSkipRate", &lpx::WebcamLPXServer::setSkipRate)
         .def("getClientCount", &lpx::WebcamLPXServer::getClientCount);
+
+    // Bind file server functionality
+    py::class_<lpx::FileLPXServer>(m, "FileLPXServer")
+        .def(py::init<const std::string&, int>(), 
+             py::arg("scanTableFile"), py::arg("port") = 5050)
+        .def("start", [](lpx::FileLPXServer& self, const std::string& videoFile, int width, int height) {
+            return self.start(videoFile, width, height);
+        }, py::arg("videoFile"), py::arg("width") = 1920, py::arg("height") = 1080)
+        .def("stop", &lpx::FileLPXServer::stop)
+        .def("setFPS", &lpx::FileLPXServer::setFPS)
+        .def("getFPS", &lpx::FileLPXServer::getFPS)
+        .def("setLooping", &lpx::FileLPXServer::setLooping)
+        .def("isLooping", &lpx::FileLPXServer::isLooping)
+        .def("setCenterOffset", &lpx::FileLPXServer::setCenterOffset)
+        .def("getClientCount", &lpx::FileLPXServer::getClientCount);
 
     // Bind debug client functionality
     py::class_<lpx::LPXDebugClient>(m, "LPXDebugClient")

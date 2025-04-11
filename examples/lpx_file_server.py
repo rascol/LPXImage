@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# lpx_file_server.py - Streams video from a file with LPXImage processing
+# lpx_file_server.py - Stream video from a file with LPXImage processing
 import numpy as np
 import cv2
 import time
@@ -19,7 +19,6 @@ except ModuleNotFoundError:
 
 # Global variables
 server = None
-running = True
 
 # Define signal handler for Ctrl+C
 def signal_handler(sig, frame):
@@ -52,124 +51,48 @@ def main():
     print(f"Scan Tables: {args.tables}")
     print(f"Port: {args.port}")
     print(f"Loop video: {'Yes' if args.loop else 'No'}")
+    print(f"Log-polar center: ({args.width/2 + args.x_offset}, {args.height/2 + args.y_offset})")
     print("Press Ctrl+C to exit")
     
-    # Create and start the server thread
-    server_thread = threading.Thread(target=run_server, args=(args,))
-    server_thread.daemon = True
-    server_thread.start()
-    
-    # Keep the main thread alive
+    # Create and start the LPX file server
+    global server
     try:
-        while running:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nKeyboard interrupt detected")
-    finally:
-        print("Exiting program forcefully...")
-        os._exit(0)  # Force immediate exit
-
-def run_server(args):
-    global server, running
-    
-    # Initialize the LPX server
-    server = lpximage.LPXServer(args.tables)
-    if not server:
-        print("Failed to create LPX server")
-        running = False
-        return
-    
-    # Open the video file
-    cap = cv2.VideoCapture(args.file)
-    if not cap.isOpened():
-        print(f"Error: Could not open video file {args.file}")
-        running = False
-        return
-    
-    # Get video file properties
-    video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    video_fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    
-    # Use provided FPS or the video's native FPS
-    fps = args.fps if args.fps > 0 else video_fps
-    frame_delay = 1.0 / fps
-    
-    print(f"Video properties: {video_width}x{video_height}, {video_fps} FPS, {total_frames} frames")
-    print(f"Streaming at: {fps} FPS (frame delay: {frame_delay:.3f}s)")
-    print(f"Log-polar center: ({args.width/2 + args.x_offset}, {args.height/2 + args.y_offset})")
-    
-    # Start the server
-    if not server.start(args.port):
-        print("Failed to start LPX server")
-        running = False
-        return
-    
-    print(f"Server started and listening on port {args.port}")
-    print("Waiting for clients to connect...")
-    
-    # Process the video file in a loop
-    try:
-        frame_count = 0
-        last_time = time.time()
+        # Initialize the server with scan tables
+        server = lpximage.FileLPXServer(args.tables, args.port)
         
-        while running:
-            # Read a frame from the video
-            ret, frame = cap.read()
+        # Configure the server
+        if args.fps > 0:
+            server.setFPS(args.fps)
+        server.setLooping(args.loop)
+        server.setCenterOffset(args.x_offset, args.y_offset)
+        
+        # Start the server with the video file
+        if not server.start(args.file, args.width, args.height):
+            print("Failed to start LPX file server. Check the video file path.")
+            return
+        
+        print(f"Server started and streaming video on port {args.port}")
+        print("Waiting for clients to connect...")
+        
+        # Main server loop - just report status periodically
+        while True:
+            # Report client count
+            client_count = server.getClientCount()
+            if client_count > 0:
+                print(f"Active clients: {client_count}")
             
-            # If we reached the end of the video
-            if not ret:
-                if args.loop:
-                    print("Reached end of video, looping back to start")
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    continue
-                else:
-                    print("Reached end of video, stopping server")
-                    break
-            
-            # Convert the frame to RGB (LPXImage expects RGB format)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            
-            # Resize if necessary
-            if video_width != args.width or video_height != args.height:
-                frame_rgb = cv2.resize(frame_rgb, (args.width, args.height))
-            
-            # Process and send the frame
-            # Calculate center with offsets
-            center_x = args.width / 2 + args.x_offset
-            center_y = args.height / 2 + args.y_offset
-            
-            # Scan the image to create an LPXImage
-            lpx_image = lpximage.scanImage(frame_rgb, center_x, center_y)
-            
-            # Send the LPX image to connected clients
-            server.sendLPXImage(lpx_image)
-            
-            # Calculate and control FPS
-            frame_count += 1
-            elapsed = time.time() - last_time
-            
-            # Report status every 100 frames
-            if frame_count % 100 == 0:
-                clients = server.getClientCount()
-                current_fps = 100 / elapsed if elapsed > 0 else 0
-                print(f"Frame: {frame_count}/{total_frames}, FPS: {current_fps:.2f}, Clients: {clients}")
-                last_time = time.time()
-            
-            # Control the frame rate
-            wait_time_ms = max(1, int(frame_delay * 1000))
-            cv2.waitKey(wait_time_ms)  # Use OpenCV's wait instead of sleep for better system compatibility
+            # Add a delay to allow signal handling
+            time.sleep(5)
             
     except Exception as e:
-        print(f"Error processing video: {e}")
+        print(f"Server error: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
-        # Clean up resources
-        cap.release()
+        # Clean up if we exit the loop
         if server:
             server.stop()
             print("Server stopped")
-        running = False
 
 if __name__ == "__main__":
     main()

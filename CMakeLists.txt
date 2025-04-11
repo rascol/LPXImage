@@ -51,7 +51,8 @@ add_library(lpx_image SHARED
     src/mt_lpx_renderer.cpp
     src/mt_lpx_image.cpp
     src/lpx_logging.cpp
-    src/lpx_webcam_server.cpp  # Added this file to the shared library
+    src/lpx_webcam_server.cpp
+    src/lpx_file_server.cpp  # Added file server implementation
 )
 
 # This ensures that executable targets can see the symbols from the lpx_image library
