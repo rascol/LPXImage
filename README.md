@@ -74,8 +74,11 @@ LPXImage includes support for streaming log-polar processed video between differ
 ### Server Computer
 
 ```bash
-# Run the server (captures video and streams LPXImage frames)
+# Option 1: Stream from webcam
 python examples/lpx_server.py
+
+# Option 2: Stream from video file
+python examples/lpx_file_server.py --file path/to/video.mp4 --loop
 
 # Options are available for camera selection and resolution
 python examples/lpx_server.py --camera 0 --width 640 --height 480

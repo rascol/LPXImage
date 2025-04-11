@@ -43,9 +43,11 @@ def main():
     parser = argparse.ArgumentParser(description='LPXImage Server - Stream video in LPXImage format')
     parser.add_argument('--tables', default='../ScanTables63', help='Path to scan tables')
     parser.add_argument('--camera', type=int, default=0, help='Camera ID')
-    parser.add_argument('--width', type=int, default=640, help='Video width')
-    parser.add_argument('--height', type=int, default=480, help='Video height')
+    parser.add_argument('--width', type=int, default=1920, help='Video width')
+    parser.add_argument('--height', type=int, default=1080, help='Video height')
     parser.add_argument('--port', type=int, default=5050, help='Server port')
+    parser.add_argument('--x_offset', type=int, default=0, help='X offset from center (positive = right)')
+    parser.add_argument('--y_offset', type=int, default=0, help='Y offset from center (positive = down)')
     args = parser.parse_args()
     
     # Register signal handler

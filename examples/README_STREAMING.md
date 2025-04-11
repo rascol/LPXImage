@@ -11,7 +11,8 @@ See the main `INSTALL_PYTHON.md` file in the root directory for installation ins
 
 1. **lpx_stream_demo.py** - Demonstrates the full streaming pipeline on a single computer
 2. **lpx_server.py** - Server program to capture video, convert to LPXImage format, and stream
-3. **lpx_renderer.py** - Client program to receive LPXImage frames and display them
+3. **lpx_file_server.py** - Server program to stream video from a file with LPXImage processing
+4. **lpx_renderer.py** - Client program to receive LPXImage frames and display them
 
 ## Setting Up Cross-Computer Streaming
 
@@ -26,10 +27,14 @@ python lpx_server.py --camera 0 --width 640 --height 480
 
 Options:
 - `--camera`: Camera device ID (default: 0)
-- `--width`: Video width (default: 640)
-- `--height`: Video height (default: 480)
+- `--width`: Video width (default: 1920)
+- `--height`: Video height (default: 1080)
 - `--tables`: Path to scan tables (default: ../ScanTables63)
 - `--port`: Server port (default: 5050)
+- `--x_offset`: X offset from center (positive = right, default: 0)
+- `--y_offset`: Y offset from center (positive = down, default: 0)
+- `--loop`: Loop the video when it ends (flag, default: false)
+- `--fps`: Override FPS (default: 0, which uses the video's native FPS)
 
 ### On the Client Computer:
 
@@ -48,6 +53,25 @@ Options:
 - `--height`: Window height (default: 600)
 - `--scale`: Rendering scale factor (default: 1.0)
 - `--tables`: Path to scan tables (default: ../ScanTables63)
+
+### Using the File Streaming Server:
+
+To stream video from a file instead of a webcam, use the lpx_file_server.py script:
+
+```bash
+python lpx_file_server.py --file path/to/video.mp4 --width 640 --height 480
+```
+
+Options:
+- `--file`: Path to the video file (required)
+- `--width`: Output video width (default: 1920)
+- `--height`: Output video height (default: 1080)
+- `--tables`: Path to scan tables (default: ../ScanTables63)
+- `--port`: Server port (default: 5050)
+- `--x_offset`: X offset from center (positive = right, default: 0)
+- `--y_offset`: Y offset from center (positive = down, default: 0)
+- `--loop`: Loop the video when it ends (flag, default: false)
+- `--fps`: Override FPS (default: 0, which uses the video's native FPS)
 
 ## Terminating the Programs
 
@@ -111,4 +135,14 @@ python lpx_server.py --width 320 --height 240
 
 # Client Computer
 python lpx_renderer.py --host 192.168.1.100 --scale 2.0
+```
+
+### Streaming from a Video File
+
+```bash
+# Server Computer
+python lpx_file_server.py --file my_video.mp4 --loop
+
+# Client Computer
+python lpx_renderer.py --host 192.168.1.100
 ```
