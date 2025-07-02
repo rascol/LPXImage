@@ -113,6 +113,9 @@ public:
     // Check if client is still running
     bool isRunning() const { return running; }
     
+    // Send movement command to server
+    bool sendMovementCommand(float deltaX, float deltaY, float stepSize = 10.0f);
+    
 private:
     void receiverThread();
     

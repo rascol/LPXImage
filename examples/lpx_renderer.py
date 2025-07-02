@@ -89,6 +89,23 @@ def main():
             if not client.processEvents():
                 break
             
+            # Capture WASD keys and send movement commands
+            key = cv2.waitKey(10) & 0xFF
+            deltaX, deltaY = 0, 0
+            stepSize = 10.0
+
+            if key == ord('w'):
+                deltaY = -1
+            elif key == ord('s'):
+                deltaY = 1
+            elif key == ord('a'):
+                deltaX = -1
+            elif key == ord('d'):
+                deltaX = 1
+
+            if deltaX != 0 or deltaY != 0:
+                client.sendMovementCommand(deltaX, deltaY, stepSize)
+
             # Calculate and display FPS every second
             frame_count += 1
             elapsed = time.time() - start_time

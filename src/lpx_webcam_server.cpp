@@ -587,6 +587,38 @@ bool LPXDebugClient::processEvents() {
     return true;
 }
 
+bool LPXDebugClient::sendMovementCommand(float deltaX, float deltaY, float stepSize) {
+    std::cout << "[DEBUG] LPXDebugClient: Sending movement command (" << deltaX << ", " << deltaY 
+              << ") step=" << stepSize << std::endl;
+    
+    if (clientSocket < 0 || !running) {
+        std::cerr << "[ERROR] Not connected to server" << std::endl;
+        return false;
+    }
+    
+    // Manually implement the movement command sending to avoid circular dependency
+    // Send command type
+    uint32_t cmdType = 0x02; // CMD_MOVEMENT
+    if (send(clientSocket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
+        std::cerr << "[ERROR] Failed to send movement command type" << std::endl;
+        return false;
+    }
+    
+    // Send movement data
+    struct {
+        float deltaX;
+        float deltaY;
+        float stepSize;
+    } cmd = {deltaX, deltaY, stepSize};
+    
+    if (send(clientSocket, &cmd, sizeof(cmd), 0) != sizeof(cmd)) {
+        std::cerr << "[ERROR] Failed to send movement command data" << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
 void LPXDebugClient::receiverThread() {
     // Window should already be initialized from main thread
     

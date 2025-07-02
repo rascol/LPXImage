@@ -151,5 +151,8 @@ PYBIND11_MODULE(lpximage, m) {
         .def("setScale", &lpx::LPXDebugClient::setScale)
         .def("initializeWindow", &lpx::LPXDebugClient::initializeWindow)
         .def("processEvents", &lpx::LPXDebugClient::processEvents)
-        .def("isRunning", &lpx::LPXDebugClient::isRunning);
+        .def("isRunning", &lpx::LPXDebugClient::isRunning)
+        .def("sendMovementCommand", [](lpx::LPXDebugClient& self, float deltaX, float deltaY, float stepSize) {
+            return self.sendMovementCommand(deltaX, deltaY, stepSize);
+        }, py::arg("deltaX"), py::arg("deltaY"), py::arg("stepSize") = 10.0f);
 }

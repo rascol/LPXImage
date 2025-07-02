@@ -7,6 +7,66 @@
 
 namespace lpx {
 
+// FileLPXProtocol implementation
+bool FileLPXProtocol::sendLPXImage(int socket, const std::shared_ptr<LPXImage>& image) {
+    std::cout << "[DEBUG] FileLPXProtocol: Sending LPX image" << std::endl;
+    
+    // Send command type first
+    uint32_t cmdType = CMD_LPX_IMAGE;
+    if (send(socket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
+        std::cerr << "[ERROR] Failed to send command type" << std::endl;
+        return false;
+    }
+    
+    // Use the existing LPXStreamProtocol to send the image
+    return LPXStreamProtocol::sendLPXImage(socket, image);
+}
+
+bool FileLPXProtocol::sendMovementCommand(int socket, float deltaX, float deltaY, float stepSize) {
+    std::cout << "[DEBUG] FileLPXProtocol: Sending movement command (" << deltaX << ", " << deltaY << ")" << std::endl;
+    
+    // Send command type
+    uint32_t cmdType = CMD_MOVEMENT;
+    if (send(socket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
+        std::cerr << "[ERROR] Failed to send movement command type" << std::endl;
+        return false;
+    }
+    
+    // Send movement data
+    MovementCommand cmd = {deltaX, deltaY, stepSize};
+    if (send(socket, &cmd, sizeof(cmd), 0) != sizeof(cmd)) {
+        std::cerr << "[ERROR] Failed to send movement command data" << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
+uint32_t FileLPXProtocol::receiveCommand(int socket, void* data, size_t maxSize) {
+    // Receive command type
+    uint32_t cmdType;
+    if (recv(socket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
+        std::cerr << "[ERROR] Failed to receive command type" << std::endl;
+        return 0;
+    }
+    
+    std::cout << "[DEBUG] FileLPXProtocol: Received command type " << cmdType << std::endl;
+    
+    if (cmdType == CMD_MOVEMENT) {
+        if (maxSize >= sizeof(MovementCommand)) {
+            if (recv(socket, data, sizeof(MovementCommand), 0) != sizeof(MovementCommand)) {
+                std::cerr << "[ERROR] Failed to receive movement command data" << std::endl;
+                return 0;
+            }
+        } else {
+            std::cerr << "[ERROR] Buffer too small for movement command" << std::endl;
+            return 0;
+        }
+    }
+    
+    return cmdType;
+}
+
 // FileLPXServer implementation
 FileLPXServer::FileLPXServer(const std::string& scanTableFile, int port) 
     : port(port), serverSocket(-1), running(false), targetFPS(30.0f), loopVideo(false),
@@ -142,6 +202,17 @@ int FileLPXServer::getClientCount() {
     return clientSockets.size();
 }
 
+void FileLPXServer::handleMovementCommand(const MovementCommand& cmd) {
+    std::cout << "[DEBUG] Handling movement command: (" << cmd.deltaX << ", " << cmd.deltaY 
+              << ") step=" << cmd.stepSize << std::endl;
+    
+    // Apply movement with step size
+    centerXOffset += cmd.deltaX * cmd.stepSize;
+    centerYOffset += cmd.deltaY * cmd.stepSize;
+    
+    std::cout << "[DEBUG] New center offset: (" << centerXOffset << ", " << centerYOffset << ")" << std::endl;
+}
+
 void FileLPXServer::videoThread() {
     float frameDelayMs = 1000.0f / targetFPS;
     std::cout << "Frame delay: " << frameDelayMs << "ms" << std::endl;
@@ -250,7 +321,7 @@ void FileLPXServer::networkThread() {
             std::vector<int> disconnectedClients;
             
             for (int clientSocket : clientSockets) {
-                if (!LPXStreamProtocol::sendLPXImage(clientSocket, imageToSend)) {
+                if (!FileLPXProtocol::sendLPXImage(clientSocket, imageToSend)) {
                     disconnectedClients.push_back(clientSocket);
                 }
             }
@@ -283,9 +354,12 @@ void FileLPXServer::acceptClients() {
                      << inet_ntoa(clientAddr.sin_addr) << ":" 
                      << ntohs(clientAddr.sin_port) << std::endl;
             
-            // Add to clients set
-            std::lock_guard<std::mutex> lock(clientsMutex);
-            clientSockets.insert(clientSocket);
+            // Add to clients set and start client handler thread
+            {
+                std::lock_guard<std::mutex> lock(clientsMutex);
+                clientSockets.insert(clientSocket);
+                clientThreads[clientSocket] = std::thread(&FileLPXServer::handleClient, this, clientSocket);
+            }
         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
             // An actual error occurred
             if (running) {
@@ -298,6 +372,43 @@ void FileLPXServer::acceptClients() {
     }
     
     std::cout << "Accept thread stopped" << std::endl;
+}
+
+void FileLPXServer::handleClient(int clientSocket) {
+    std::cout << "[DEBUG] Client handler started for socket " << clientSocket << std::endl;
+    
+    // Set socket to non-blocking for movement command reception
+    int flags = fcntl(clientSocket, F_GETFL, 0);
+    fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK);
+    
+    while (running) {
+        // Check for incoming movement commands
+        MovementCommand cmd;
+        uint32_t cmdType = FileLPXProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
+        
+        if (cmdType == FileLPXProtocol::CMD_MOVEMENT) {
+            std::cout << "[DEBUG] Received movement command from client " << clientSocket << std::endl;
+            handleMovementCommand(cmd);
+        } else if (cmdType == 0) {
+            // No command received or error - check if socket is still valid
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                std::cout << "[DEBUG] Client " << clientSocket << " disconnected or error occurred" << std::endl;
+                break;
+            }
+        }
+        
+        // Sleep briefly to avoid CPU burnout
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    
+    // Clean up this client
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex);
+        clientSockets.erase(clientSocket);
+        close(clientSocket);
+    }
+    
+    std::cout << "[DEBUG] Client handler stopped for socket " << clientSocket << std::endl;
 }
 
 } // namespace lpx

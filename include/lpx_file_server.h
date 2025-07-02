@@ -17,6 +17,31 @@
 
 namespace lpx {
 
+// Movement command for file server
+struct MovementCommand {
+    float deltaX;
+    float deltaY;
+    float stepSize;
+};
+
+// Extended protocol for file server with movement support
+class FileLPXProtocol {
+public:
+    enum CommandType : uint32_t {
+        CMD_LPX_IMAGE = 0x01,
+        CMD_MOVEMENT = 0x02
+    };
+    
+    // Send an LPXImage
+    static bool sendLPXImage(int socket, const std::shared_ptr<LPXImage>& image);
+    
+    // Send a movement command to server
+    static bool sendMovementCommand(int socket, float deltaX, float deltaY, float stepSize = 10.0f);
+    
+    // Receive a command (returns command type)
+    static uint32_t receiveCommand(int socket, void* data, size_t maxSize);
+};
+
 class FileLPXServer {
 public:
     FileLPXServer(const std::string& scanTableFile, int port = 5050);
@@ -43,11 +68,15 @@ public:
     // Check client count
     int getClientCount();
     
+    // Handle movement command
+    void handleMovementCommand(const MovementCommand& cmd);
+    
 private:
     // Thread functions
     void videoThread();
     void networkThread();
     void acceptClients();
+    void handleClient(int clientSocket);
     
     // Components 
     std::shared_ptr<LPXTables> scanTables;
@@ -73,6 +102,7 @@ private:
     // Client management
     std::mutex clientsMutex;
     std::set<int> clientSockets;
+    std::map<int, std::thread> clientThreads;
     
     // Threading
     std::atomic<bool> running;
