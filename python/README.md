@@ -13,6 +13,8 @@ See the main [INSTALL_PYTHON.md](../INSTALL_PYTHON.md) file for installation ins
 The `LPXTables` class handles the scan tables that define the mapping between standard image coordinates and log-polar coordinates.
 
 ```python
+import lpximage
+
 # Initialize scan tables
 tables = lpximage.LPXTables("path/to/ScanTables63")
 
@@ -31,6 +33,8 @@ print(f"Rings count: {tables.ringsCount}")
 The `LPXImage` class represents a log-polar transformed image.
 
 ```python
+import lpximage
+
 # Get an LPXImage from scanning a standard image
 lpx_image = lpximage.scanImage(img_rgb, center_x, center_y)
 
@@ -43,6 +47,8 @@ cell_count = lpx_image.getLength()
 The `LPXRenderer` class renders LPXImage objects back to standard images.
 
 ```python
+import lpximage
+
 # Initialize renderer
 renderer = lpximage.LPXRenderer()
 renderer.setScanTables(tables)
@@ -59,6 +65,8 @@ standard_img = renderer.renderToImage(lpx_image, 800, 600, 1.0)
 The `WebcamLPXServer` class captures video from a webcam, converts it to log-polar format, and streams it to clients.
 
 ```python
+import lpximage
+
 # Create server with scan tables
 server = lpximage.WebcamLPXServer("path/to/ScanTables63")
 
@@ -79,6 +87,8 @@ server.stop()
 The `LPXDebugClient` class receives log-polar image streams and displays them.
 
 ```python
+import lpximage
+
 # Create client with scan tables
 client = lpximage.LPXDebugClient("path/to/ScanTables63")
 
@@ -110,6 +120,8 @@ client.disconnect()
 Initializes the LPX system with scan tables and dimensions.
 
 ```python
+import lpximage
+
 # Initialize LPX system
 if not lpximage.initLPX("path/to/ScanTables63", width, height):
     print("Failed to initialize LPX system")
@@ -120,6 +132,8 @@ if not lpximage.initLPX("path/to/ScanTables63", width, height):
 Converts a standard image to log-polar format.
 
 ```python
+import lpximage
+
 # Convert BGR to RGB
 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -192,6 +206,8 @@ These scripts demonstrate how to set up cross-computer streaming of log-polar pr
 Most methods in the API return boolean values to indicate success or failure. Always check these return values:
 
 ```python
+import lpximage
+
 # Example of proper error handling
 if not client.connect("localhost"):
     print("Failed to connect to server")

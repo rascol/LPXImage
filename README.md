@@ -20,6 +20,8 @@ This is a cross-platform implementation of the log-polar image transformation fo
 
 ### C++ Library
 
+The steps below create the Python import library "lpximage" that provides the Log-Polar image conversion properties. This library is unique to each computer and operating system.
+
 #### macOS/Linux
 ```bash
 # Create build directory
