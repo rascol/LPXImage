@@ -10,6 +10,7 @@
 #include <queue>
 #include <set>
 #include <string>
+#include <chrono>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -19,9 +20,13 @@ namespace lpx {
 // Simple network protocol for LPXImage streaming
 class LPXStreamProtocol {
 public:
+    // Send a frame index over a socket
+    static bool sendFrameIndex(int socket, int frameIndex);
     // Send an LPXImage over a socket
     static bool sendLPXImage(int socket, const std::shared_ptr<LPXImage>& image);
     
+    // Receive a frame index from a socket
+    static int receiveFrameIndex(int socket);
     // Receive an LPXImage from a socket
     static std::shared_ptr<LPXImage> receiveLPXImage(int socket, std::shared_ptr<LPXTables> scanTables);
 };
@@ -142,6 +147,10 @@ private:
     std::mutex displayMutex;
     cv::Mat latestImage;
     bool newImageAvailable = false;
+    
+    // Key throttling to prevent socket overflow
+    std::chrono::steady_clock::time_point lastKeyTime;
+    static constexpr int KEY_THROTTLE_MS = 500; // Minimum 500ms between movement commands
 };
 
 } // namespace lpx

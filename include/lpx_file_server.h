@@ -56,8 +56,8 @@ public:
     float getFPS() const { return targetFPS; }
     
     // Looping control
-    void setLooping(bool loop) { loopVideo = loop; }
-    bool isLooping() const { return loopVideo; }
+    void setLooping(bool loop);
+    bool isLooping() const { return loopVideo.load(); }
     
     // Set log-polar center offset
     void setCenterOffset(float x_offset, float y_offset) {
@@ -102,7 +102,6 @@ private:
     // Client management
     std::mutex clientsMutex;
     std::set<int> clientSockets;
-    std::map<int, std::thread> clientThreads;
     
     // Threading
     std::atomic<bool> running;
@@ -117,6 +116,7 @@ private:
     // Video control
     std::atomic<float> targetFPS;
     std::atomic<bool> loopVideo;
+    std::atomic<bool> restartVideoFlag{false};
     
     // Output size
     int outputWidth = 1920;

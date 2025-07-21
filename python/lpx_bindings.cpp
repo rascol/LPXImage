@@ -14,23 +14,26 @@
 #include "../include/lpx_webcam_server.h"
 #include "../include/lpx_file_server.h"  // Include file server header
 #include <opencv2/opencv.hpp>
+#include <cstring>
+#include <iostream>
 
 namespace py = pybind11;
 
 // Helper function to convert OpenCV Mat to numpy array
 py::array_t<uint8_t> mat_to_numpy(const cv::Mat& image) {
-    // Create a Python object that will free the allocated memory when destroyed
-    py::capsule free_when_done(image.data, [](void* f) {
-        // This lambda function does nothing since OpenCV will free the memory
-    });
-
-    // Return numpy array with the data from the Mat
-    return py::array_t<uint8_t>(
-        {image.rows, image.cols, image.channels()},    // shape
-        {image.step[0], image.step[1], sizeof(uint8_t)},   // strides
-        image.data,   // pointer to data
-        free_when_done   // capsule with deleter
+    // Always clone the Mat to ensure independent memory management
+    cv::Mat cloned = image.clone();
+    
+    // Allocate new memory for numpy array
+    auto result = py::array_t<uint8_t>(
+        {cloned.rows, cloned.cols, cloned.channels()},    // shape
+        {cloned.step[0], cloned.step[1], sizeof(uint8_t)}   // strides
     );
+    
+    // Copy data to numpy array
+    std::memcpy(result.mutable_data(), cloned.data, cloned.total() * cloned.elemSize());
+    
+    return result;
 }
 
 // Helper function to convert numpy array to OpenCV Mat
@@ -81,8 +84,17 @@ PYBIND11_MODULE(lpximage, m) {
         .def("renderToImage", [](lpx::LPXRenderer& self, 
                               std::shared_ptr<lpx::LPXImage> image,
                               int targetWidth, int targetHeight, float scale) {
-            cv::Mat rendered = self.renderToImage(image, targetWidth, targetHeight, scale);
-            return mat_to_numpy(rendered);
+            try {
+                cv::Mat rendered = self.renderToImage(image, targetWidth, targetHeight, scale);
+                if (rendered.empty()) {
+                    throw std::runtime_error("Failed to render image - returned empty Mat");
+                }
+                return mat_to_numpy(rendered);
+            } catch (const cv::Exception& e) {
+                throw std::runtime_error("OpenCV error in renderToImage: " + std::string(e.what()));
+            } catch (const std::exception& e) {
+                throw std::runtime_error("Error in renderToImage: " + std::string(e.what()));
+            }
         });
 
     // Bind multithreaded scanning function
@@ -133,26 +145,59 @@ PYBIND11_MODULE(lpximage, m) {
     // Bind debug client functionality
     py::class_<lpx::LPXDebugClient>(m, "LPXDebugClient")
         .def(py::init<const std::string&>())
-        .def("connect", [](lpx::LPXDebugClient& self, const std::string& serverAddress, int port) {
+        .def("connect", [](lpx::LPXDebugClient& self, const std::string& serverAddress) {
             try {
-                bool success = self.connect(serverAddress, port);
-                if (!success) {
-                    std::cerr << "LPXDebugClient: Connection failed" << std::endl;
-                }
-                return success;
+                return self.connect(serverAddress, 5050);
             } catch (const std::exception& e) {
-                std::cerr << "LPXDebugClient: Exception during connect: " << e.what() << std::endl;
-                throw;
+                throw std::runtime_error("Connection failed: " + std::string(e.what()));
             }
-        }, py::arg("serverAddress"), py::arg("port") = 5050)
-        .def("disconnect", &lpx::LPXDebugClient::disconnect)
+        }, py::arg("serverAddress"))
+        .def("disconnect", [](lpx::LPXDebugClient& self) {
+            try {
+                self.disconnect();
+            } catch (const std::exception& e) {
+                // Log but don't throw on disconnect - allow cleanup to continue
+                std::cerr << "Warning during disconnect: " << e.what() << std::endl;
+            }
+        })
         .def("setWindowTitle", &lpx::LPXDebugClient::setWindowTitle)
         .def("setWindowSize", &lpx::LPXDebugClient::setWindowSize)
         .def("setScale", &lpx::LPXDebugClient::setScale)
-        .def("initializeWindow", &lpx::LPXDebugClient::initializeWindow)
-        .def("processEvents", &lpx::LPXDebugClient::processEvents)
+        .def("initializeWindow", [](lpx::LPXDebugClient& self) {
+            try {
+                self.initializeWindow();
+            } catch (const cv::Exception& e) {
+                throw std::runtime_error("OpenCV error initializing window: " + std::string(e.what()));
+            } catch (const std::exception& e) {
+                throw std::runtime_error("Error initializing window: " + std::string(e.what()));
+            }
+        })
+        .def("processEvents", [](lpx::LPXDebugClient& self) {
+            try {
+                bool result = self.processEvents();
+                return result;
+            } catch (const cv::Exception& e) {
+                std::cerr << "OpenCV error in processEvents: " << e.what() << std::endl;
+                // Don't throw - return false to indicate failure
+                return false;
+            } catch (const std::runtime_error& e) {
+                std::cerr << "Runtime error in processEvents: " << e.what() << std::endl;
+                return false;
+            } catch (const std::exception& e) {
+                std::cerr << "Error in processEvents: " << e.what() << std::endl;
+                return false;
+            } catch (...) {
+                std::cerr << "Unknown error in processEvents" << std::endl;
+                return false;
+            }
+        })
         .def("isRunning", &lpx::LPXDebugClient::isRunning)
         .def("sendMovementCommand", [](lpx::LPXDebugClient& self, float deltaX, float deltaY, float stepSize) {
-            return self.sendMovementCommand(deltaX, deltaY, stepSize);
+            try {
+                return self.sendMovementCommand(deltaX, deltaY, stepSize);
+            } catch (const std::exception& e) {
+                std::cerr << "Error sending movement command: " << e.what() << std::endl;
+                return false;
+            }
         }, py::arg("deltaX"), py::arg("deltaY"), py::arg("stepSize") = 10.0f);
 }

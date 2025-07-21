@@ -76,6 +76,13 @@ inline int getXCellIndex(float x, float y, float spiralPer) {
     spiralPer = std::floor(spiralPer) + 0.5f;
 
     float radius = std::sqrt(x * x + y * y);
+    
+    // Bounds check: if radius is too large, return a safe default
+    // This prevents invalid cell calculations when coordinates are extreme
+    if (radius > 10000.0f) {
+        return 0; // Return center cell for extreme coordinates
+    }
+    
     float angle = std::atan2(y, x);
 
     float pitch = 1.0f / spiralPer;
@@ -135,6 +142,12 @@ inline int getXCellIndex(float x, float y, float spiralPer) {
         } else {  // Else if Region 5
             iCell = iCell + static_cast<int>(spiralPer);
         }
+        
+        // Final bounds check: ensure result is reasonable
+        if (iCell < 0 || iCell > 100000) {
+            return 0; // Return center cell for unreasonable results
+        }
+        
         return iCell;
     }
 }

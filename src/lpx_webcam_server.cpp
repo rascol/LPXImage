@@ -469,7 +469,7 @@ void WebcamLPXServer::adjustSkipRate(float processingTime, bool hasMotion) {
 
 // LPXDebugClient implementation
 LPXDebugClient::LPXDebugClient(const std::string& scanTableFile)
-    : clientSocket(-1), running(false) {
+    : clientSocket(-1), running(false), lastKeyTime(std::chrono::steady_clock::now()) {
     
     // Initialize scan tables
     scanTables = std::make_shared<LPXTables>(scanTableFile);
@@ -483,14 +483,38 @@ LPXDebugClient::LPXDebugClient(const std::string& scanTableFile)
 }
 
 LPXDebugClient::~LPXDebugClient() {
-    disconnect();
+    // Stop threads but don't call disconnect() from destructor
+    // as it may involve OpenCV window operations that need main thread
+    if (running) {
+        running = false;
+        
+        if (clientSocket >= 0) {
+            close(clientSocket);
+            clientSocket = -1;
+        }
+        
+        if (receiverThreadHandle.joinable()) {
+            receiverThreadHandle.join();
+        }
+    }
 }
 
 bool LPXDebugClient::connect(const std::string& serverAddress, int port) {
     if (running) disconnect();
     
-    this->serverAddress = serverAddress;
-    this->port = port;
+    // Parse server address - handle "host:port" format
+    std::string host = serverAddress;
+    int actualPort = port;
+    
+    size_t colonPos = serverAddress.find(':');
+    if (colonPos != std::string::npos) {
+        host = serverAddress.substr(0, colonPos);
+        actualPort = std::stoi(serverAddress.substr(colonPos + 1));
+        std::cout << "[DEBUG] Parsed address: host=" << host << ", port=" << actualPort << std::endl;
+    }
+    
+    this->serverAddress = host;
+    this->port = actualPort;
     
     // Create socket
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -502,16 +526,17 @@ bool LPXDebugClient::connect(const std::string& serverAddress, int port) {
     // Connect to server
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
+    serverAddr.sin_port = htons(actualPort);
     
-    if (inet_pton(AF_INET, serverAddress.c_str(), &serverAddr.sin_addr) <= 0) {
-        std::cerr << "Invalid address/Address not supported" << std::endl;
+    if (inet_pton(AF_INET, host.c_str(), &serverAddr.sin_addr) <= 0) {
+        std::cerr << "Invalid address/Address not supported: " << host << std::endl;
         close(clientSocket);
         return false;
     }
     
     if (::connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        std::cerr << "Connection failed" << std::endl;
+        std::cerr << "LPXDebugClient: Connection failed to " << host << ":" << actualPort 
+                  << " - " << strerror(errno) << std::endl;
         close(clientSocket);
         return false;
     }
@@ -521,7 +546,7 @@ bool LPXDebugClient::connect(const std::string& serverAddress, int port) {
     // Start receiver thread
     receiverThreadHandle = std::thread(&LPXDebugClient::receiverThread, this);
     
-    std::cout << "Connected to LPX server at " << serverAddress << ":" << port << std::endl;
+    std::cout << "Connected to LPX server at " << host << ":" << actualPort << std::endl;
     return true;
 }
 
@@ -538,6 +563,9 @@ void LPXDebugClient::disconnect() {
     if (receiverThreadHandle.joinable()) {
         receiverThreadHandle.join();
     }
+    
+    // Cleanup OpenCV windows from main thread
+    cv::destroyWindow(windowTitle);
     
     std::cout << "Disconnected from LPX server" << std::endl;
 }
@@ -575,15 +603,66 @@ bool LPXDebugClient::processEvents() {
         }
     }
     
+    // Handle WASD keyboard input for movement
+    if (key != -1 && key != 255) {  // A key was pressed
+        float deltaX = 0, deltaY = 0;
+        float stepSize = 10.0f;
+        bool shouldSendCommand = false;
+        
+        switch (key) {
+            case 'w':
+            case 'W':
+                deltaY = -1;
+                shouldSendCommand = true;
+                std::cout << "W pressed - moving up" << std::endl;
+                break;
+            case 's':
+            case 'S':
+                deltaY = 1;
+                shouldSendCommand = true;
+                std::cout << "S pressed - moving down" << std::endl;
+                break;
+            case 'a':
+            case 'A':
+                deltaX = -1;
+                shouldSendCommand = true;
+                std::cout << "A pressed - moving left" << std::endl;
+                break;
+            case 'd':
+            case 'D':
+                deltaX = 1;
+                shouldSendCommand = true;
+                std::cout << "D pressed - moving right" << std::endl;
+                break;
+            case 27: // ESC key
+            case 'q':
+            case 'Q':
+                std::cout << "Exit key pressed" << std::endl;
+                running = false;
+                return false;
+        }
+        
+        // Send movement command if any movement was detected and throttling allows
+        if (shouldSendCommand && (deltaX != 0 || deltaY != 0)) {
+            auto now = std::chrono::steady_clock::now();
+            auto timeSinceLastKey = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyTime).count();
+            
+            if (timeSinceLastKey >= KEY_THROTTLE_MS) {
+                std::cout << "Sending movement command: deltaX=" << deltaX << ", deltaY=" << deltaY << ", stepSize=" << stepSize << std::endl;
+                sendMovementCommand(deltaX, deltaY, stepSize);
+                lastKeyTime = now;
+            } else {
+                std::cout << "Key throttled (" << timeSinceLastKey << "ms < " << KEY_THROTTLE_MS << "ms)" << std::endl;
+            }
+        }
+    }
+    
     // Log periodically that we're processing events
     static int counter = 0;
     if (++counter % 100 == 0) {
         std::cout << "Main thread processing UI events..." << std::endl;
     }
-    if (key == 27) { // ESC key
-        running = false;
-        return false;
-    }
+    
     return true;
 }
 
@@ -596,42 +675,66 @@ bool LPXDebugClient::sendMovementCommand(float deltaX, float deltaY, float stepS
         return false;
     }
     
-    // Manually implement the movement command sending to avoid circular dependency
-    // Send command type
-    uint32_t cmdType = 0x02; // CMD_MOVEMENT
-    if (send(clientSocket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
-        std::cerr << "[ERROR] Failed to send movement command type" << std::endl;
+    // Check socket is still valid before sending
+    int error = 0;
+    socklen_t len = sizeof(error);
+    if (getsockopt(clientSocket, SOL_SOCKET, SO_ERROR, &error, &len) != 0 || error != 0) {
+        std::cerr << "[ERROR] Socket error detected: " << strerror(error) << std::endl;
+        running = false;
         return false;
     }
     
-    // Send movement data
+    // Send command type with error checking
+    uint32_t cmdType = 0x02; // CMD_MOVEMENT
+    ssize_t sent = send(clientSocket, &cmdType, sizeof(cmdType), MSG_NOSIGNAL);
+    if (sent != sizeof(cmdType)) {
+        std::cerr << "[ERROR] Failed to send movement command type: sent " << sent 
+                  << " bytes, expected " << sizeof(cmdType) << ", errno: " << strerror(errno) << std::endl;
+        if (errno == EPIPE || errno == ECONNRESET) {
+            running = false;
+        }
+        return false;
+    }
+    
+    // Send movement data with error checking
     struct {
         float deltaX;
         float deltaY;
         float stepSize;
     } cmd = {deltaX, deltaY, stepSize};
     
-    if (send(clientSocket, &cmd, sizeof(cmd), 0) != sizeof(cmd)) {
-        std::cerr << "[ERROR] Failed to send movement command data" << std::endl;
+    sent = send(clientSocket, &cmd, sizeof(cmd), MSG_NOSIGNAL);
+    if (sent != sizeof(cmd)) {
+        std::cerr << "[ERROR] Failed to send movement command data: sent " << sent 
+                  << " bytes, expected " << sizeof(cmd) << ", errno: " << strerror(errno) << std::endl;
+        if (errno == EPIPE || errno == ECONNRESET) {
+            running = false;
+        }
         return false;
     }
+    
+    // Small delay to ensure socket operation completes
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     
     return true;
 }
 
 void LPXDebugClient::receiverThread() {
     // Window should already be initialized from main thread
+    std::cout << "[DEBUG] LPXDebugClient::receiverThread started" << std::endl;
     
     while (running) {
+        std::cout << "[DEBUG] LPXDebugClient: Attempting to receive LPXImage..." << std::endl;
+        
         // Receive an LPXImage
         auto image = LPXStreamProtocol::receiveLPXImage(clientSocket, scanTables);
         
         if (!image) {
-            std::cout << "Connection lost or failed to receive image" << std::endl;
+            std::cout << "[DEBUG] LPXDebugClient: Connection lost or failed to receive image" << std::endl;
             running = false;
             break;
         } else {
-            std::cout << "Received LPXImage with " << image->getLength() << " cells" << std::endl;
+            std::cout << "[DEBUG] LPXDebugClient: Received LPXImage with " << image->getLength() << " cells" << std::endl;
         }
         
         // Render the image using the existing multithreaded renderer
@@ -650,18 +753,36 @@ void LPXDebugClient::receiverThread() {
             endTime - startTime).count();
         
         if (!rendered.empty()) {
-            // Display stats on the image
-            std::string stats = "Render: " + std::to_string(duration) + "ms, Cells: " 
-                               + std::to_string(image->getLength());
-            // Add stats to the rendered image
-            cv::putText(rendered, stats, cv::Point(10, 20), 
-                      cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+            try {
+                // Verify image properties before text operations
+                if (rendered.channels() >= 3 && rendered.rows > 25 && rendered.cols > 200) {
+                    // Display stats on the image
+                    std::string stats = "Render: " + std::to_string(duration) + "ms, Cells: " 
+                                       + std::to_string(image->getLength());
+                    // Add stats to the rendered image with error handling
+                    cv::putText(rendered, stats, cv::Point(10, 20), 
+                              cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                }
+            } catch (const cv::Exception& e) {
+                std::cerr << "OpenCV error in text rendering: " << e.what() << std::endl;
+                // Continue without text - don't crash
+            } catch (const std::exception& e) {
+                std::cerr << "Error in text rendering: " << e.what() << std::endl;
+                // Continue without text - don't crash
+            }
             
             // Update shared buffer (threadsafe) for main thread to display
-            {
+            try {
                 std::lock_guard<std::mutex> lock(displayMutex);
-                rendered.copyTo(latestImage);
+                // Create a safe clone instead of copyTo to avoid memory issues
+                latestImage = rendered.clone();
                 newImageAvailable = true;
+            } catch (const cv::Exception& e) {
+                std::cerr << "OpenCV error in image cloning: " << e.what() << std::endl;
+                running = false;  // Stop if we can't clone images safely
+            } catch (const std::exception& e) {
+                std::cerr << "Error in image cloning: " << e.what() << std::endl;
+                running = false;  // Stop if we can't clone images safely
             }
             
             std::cout << "Image ready for display" << std::endl;
@@ -671,7 +792,7 @@ void LPXDebugClient::receiverThread() {
         }
     }
     
-    cv::destroyAllWindows();
+    // Don't destroy windows from receiver thread - let main thread handle cleanup
     std::cout << "Receiver thread stopped" << std::endl;
 }
 

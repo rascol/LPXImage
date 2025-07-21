@@ -30,10 +30,23 @@ inline int getXCellIndex(float x, float y, float spiralPer) {
         return 0;
     }
 
+    // Add safety bounds to prevent extreme coordinate crashes
+    const float MAX_COORD = 10000.0f;
+    const int MAX_CELL_INDEX = 100000;
+    
+    // Clamp input coordinates to reasonable bounds
+    x = std::max(-MAX_COORD, std::min(x, MAX_COORD));
+    y = std::max(-MAX_COORD, std::min(y, MAX_COORD));
+
     spiralPer = std::floor(spiralPer) + 0.5f;
 
     float radius = std::sqrt(x * x + y * y);
     float angle = std::atan2(y, x);
+    
+    // If radius is too large, return a safe default
+    if (radius > MAX_COORD * 0.5f) {
+        return 0;
+    }
 
     float pitch = 1.0f / spiralPer;
     float pitchAng = 0.99999999f * TWO_PI * pitch;  // Fixup for round off error

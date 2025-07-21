@@ -59,55 +59,78 @@ extern bool set_high_priority();
              // If we're very close to the center, use special fovea handling
              float distFromCenter = std::sqrt(scaledX * scaledX + scaledY * scaledY);
              
-             // Direct method: Calculate cell index from relative coordinates
-             int cellIndex = getXCellIndex(scaledX, scaledY, spiralPer);
+            // Direct method: Calculate cell index from relative coordinates
+            int cellIndex = getXCellIndex(scaledX, scaledY, spiralPer);
+            
+            // Add initial bounds check for cellIndex
+            if (cellIndex < 0 || cellIndex >= maxLen) {
+                cellIndex = 0; // Default to first cell for invalid indices
+            }
+            
+            // Handle the fovea region
+            float centerRadius = 100.0f; // Radius for central region
+            
+            // If the cell index is the last fovea index, use direct cell index calculation
+            // This is how the JavaScript implementation identifies fovea region pixels
+            bool isFoveaRegion = (cellIndex <= scanTables->lastFoveaIndex) || (distFromCenter < centerRadius);
+            
+            if (isFoveaRegion) {
+                // In the fovea region, calculate cell index directly from relative position
+                // This exactly matches how the JavaScript implementation works
+                // The key difference: we convert from screen coords back to LOG-POLAR COORDINATES
+                float relXtoCenter = x - outputCenterX;
+                float relYtoCenter = y - outputCenterY;
+                
+                // Use direct calculation for the fovea region
+                int iC = getXCellIndex(relXtoCenter, relYtoCenter, spiralPer);
+                
+                // Make sure the calculated index is within valid range
+                iC = std::max(0, std::min(iC, maxLen - 1));
+                
+                // Additional bounds check for fovea calculation
+                if (iC < 0 || iC >= maxLen) {
+                    iC = 0; // Default to center cell for invalid fovea indices
+                }
+                
+                // Use this value for the current pixel
+                cellIndex = iC;
+            }
+            
+            // Ensure the cell index is valid (0 to maxLen-1)
+            cellIndex = std::max(0, std::min(cellIndex, maxLen - 1));
+            
+            // Apply cell offset with bounds checking
+            int iCell = cellOffset + cellIndex;
+            if (iCell < 0 || iCell >= maxLen) {
+                iCell = cellIndex; // Fall back to original cell index if offset is invalid
+            }
              
-             // Handle the fovea region
-             float centerRadius = 100.0f; // Radius for central region
+            // Skip special marker cells (only check if iCell is within bounds)
+            if (iCell >= 0 && iCell < maxLen && lpxImage->getCellValue(iCell) == 0x00200400) {
+                continue;
+            }
+            
+            // Get the color values - use comprehensive bounds checking to prevent crashes
+            uint8_t r, g, b;
+            if (iCell >= 0 && iCell < maxLen && 
+                iCell < static_cast<int>(red.size()) && 
+                iCell < static_cast<int>(green.size()) && 
+                iCell < static_cast<int>(blue.size())) {
+                r = red[iCell];
+                g = green[iCell];
+                b = blue[iCell];
+            } else {
+                // Cell index is out of bounds - display black/blank pixel
+                r = 0;
+                g = 0;
+                b = 0;
+            }
              
-             // If the cell index is the last fovea index, use direct cell index calculation
-             // This is how the JavaScript implementation identifies fovea region pixels
-             bool isFoveaRegion = (cellIndex <= scanTables->lastFoveaIndex) || (distFromCenter < centerRadius);
-             
-             if (isFoveaRegion) {
-                 // In the fovea region, calculate cell index directly from relative position
-                 // This exactly matches how the JavaScript implementation works
-                 // The key difference: we convert from screen coords back to LOG-POLAR COORDINATES
-                 float relXtoCenter = x - outputCenterX;
-                 float relYtoCenter = y - outputCenterY;
-                 
-                 // Use direct calculation for the fovea region
-                 int iC = getXCellIndex(relXtoCenter, relYtoCenter, spiralPer);
-                 
-                 // Make sure the calculated index is within valid range
-                 iC = std::max(0, std::min(iC, maxLen - 1));
-                 
-                 // Use this value for the current pixel
-                 cellIndex = iC;
-             }
-             
-             // Ensure the cell index is valid (0 to maxLen-1)
-             cellIndex = std::max(0, std::min(cellIndex, maxLen - 1));
-             
-             // Apply cell offset
-             int iCell = cellOffset + cellIndex;
-             if (iCell >= maxLen) {
-                 iCell = cellIndex; // Fall back to original cell index if offset pushes beyond range
-             }
-             
-             // Skip special marker cells
-             if (lpxImage->getCellValue(iCell) == 0x00200400) {
-                 continue;
-             }
-             
-             // Get the color values
-             uint8_t r = red[iCell];
-             uint8_t g = green[iCell];
-             uint8_t b = blue[iCell];
-             
-             // Set the pixel color
+             // Set the pixel color with bounds checking
              cv::Vec3b color(b, g, r); // OpenCV uses BGR format
-             output.at<cv::Vec3b>(y, x) = color;
+             if (y >= 0 && y < output.rows && x >= 0 && x < output.cols) {
+                 output.at<cv::Vec3b>(y, x) = color;
+             }
          }
      }
  }

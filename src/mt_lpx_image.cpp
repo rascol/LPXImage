@@ -236,6 +236,11 @@ void processImageRegion(const cv::Mat& image, int yStart, int yEnd,
         for (int j_s = 0; j_s < image.cols; j_s++) {
             int i_m = i_m_ofs + j_s; // Current pixel index in scan map
             
+            // Bounds check: ensure i_m is within valid scan table range
+            if (i_m < 0 || i_m >= sct->mapWidth * sct->mapWidth) {
+                continue; // Skip pixels outside scan table bounds
+            }
+            
             // Find the cell index for this pixel using binary search in the scan tables
             int iCell = findCellIndex(i_m);
             
@@ -472,6 +477,11 @@ bool LPXImage::scanFromImage(const cv::Mat& image, float x_center, float y_cente
         for (int j_s = box.xMin; j_s < box.xMax; j_s++) {
             int i_m = i_m_ofs + j_s; // Current pixel index in scan map
             
+            // Bounds check: ensure i_m is within valid scan table range
+            if (i_m < 0 || i_m >= sct->mapWidth * sct->mapWidth) {
+                continue; // Skip pixels outside scan table bounds
+            }
+            
             // Find the cell index for this pixel using binary search in the scan tables
             int iCell = 0;
             
@@ -632,11 +642,8 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float 
         }
     }
     
-    // STEP 2: Process the rest of the image using multiple threads
-    // Determine the number of threads to use (leave 1 core free for system)
-    unsigned int numThreads = std::max(1u, std::thread::hardware_concurrency() - 1);
-    if (numThreads == 0) numThreads = 1; // Safeguard
-    // std::cout << "Using " << numThreads << " threads for outer region processing" << std::endl;
+    // STEP 2: Process the rest of the image using single thread for better performance
+    // Thread creation/destruction overhead was causing sync delays
     
     // Calculate dimensions and offsets for the outer region
     int j_ofs = static_cast<int>(x_center);
@@ -645,31 +652,14 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float 
     // Get bounding box for processing
     lpx::Rect box = internal::getScannedBox(x_center, y_center, image.cols, image.rows, nMaxCells, sct->spiralPer, sct);
     
-    // Create a mutex for thread-safe accumulator updates
-    std::mutex accMutex;
-    
-    // Divide the image into horizontal strips and process each strip in a separate thread
-    std::vector<std::thread> threads;
-    int rowsPerThread = (box.yMax - box.yMin) / numThreads;
-    if (rowsPerThread < 1) rowsPerThread = 1; // Safeguard
-    
-    // Launch threads
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    for (unsigned int t = 0; t < numThreads; t++) {
-        int startRow = box.yMin + t * rowsPerThread;
-        int endRow = (t == numThreads - 1) ? box.yMax : startRow + rowsPerThread;
-        
-        threads.push_back(std::thread(internal::processImageRegion, std::ref(image), startRow, endRow, 
-                                    x_center, y_center, sct, 
-                                    std::ref(accR), std::ref(accG), std::ref(accB), std::ref(count),
-                                    std::ref(accMutex)));
-    }
+    // Process directly without thread overhead
+    std::mutex dummyMutex;
+    internal::processImageRegion(image, box.yMin, box.yMax, 
+                            x_center, y_center, sct, 
+                            accR, accG, accB, count, dummyMutex);
     
-    // Wait for all threads to complete
-    for (auto& thread : threads) {
-        thread.join();
-    }
     
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();

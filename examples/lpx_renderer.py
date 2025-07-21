@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # lpx_renderer.py - Receives LPXImage frames from server, renders them, and displays
 import numpy as np
-import cv2
 
 try:
     import lpximage
@@ -35,76 +34,89 @@ def main():
     print(f"Connecting to: {args.host}")
     print(f"Window size: {args.width}x{args.height}")
     print(f"Scan Tables: {args.tables}")
+    print("IMPORTANT: Click on the display window and use WASD keys to move")
     print("Press Ctrl+C in terminal to exit")
     
     # Create the LPX debug client
+    print("DEBUG: About to create LPXDebugClient...")
     client = lpximage.LPXDebugClient(args.tables)
+    print("DEBUG: LPXDebugClient created successfully")
     
     # Configure the display window
+    print("DEBUG: Configuring display window...")
     client.setWindowTitle("LPX Remote Renderer")
     client.setWindowSize(args.width, args.height)
     client.setScale(args.scale)
+    print(f"DEBUG: Window configured - {args.width}x{args.height}, scale={args.scale}")
     
     # Initialize the window (must be on main thread)
+    print("DEBUG: About to initialize window...")
     client.initializeWindow()
+    print("DEBUG: Window initialized successfully")
+    
+    # Keyboard input is now handled directly by the LPXDebugClient window
+    print("\n=== KEYBOARD CONTROLS ===")
+    print("Click on the main LPX display window and use WASD keys to move")
+    print("W/S: Move up/down | A/D: Move left/right | Q/ESC: Quit")
+    print("=========================")
     
     # Define a clean exit function
     def clean_exit():
-        # Just call disconnect - the isConnected() method doesn't exist
         try:
+            print("Cleaning up...")
             client.disconnect()
             print("Disconnected from server")
         except Exception as e:
             print(f"Error disconnecting: {e}")
-        cv2.destroyAllWindows()
         print("Renderer exiting...")
         sys.exit(0)
     
     # Set up signal handler for Ctrl+C
     def signal_handler(sig, frame):
-        print("\nCtrl+C pressed, exiting...")
-        print("Forcing immediate exit...")
-        # Skip any cleanup - just terminate immediately
-        os._exit(0)  # Immediately terminates the process without any cleanup
+        print("\nCtrl+C pressed, cleaning up...")
+        clean_exit()
     
     # Register signal handlers for various signals
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    # Connect to the server
+    # Connect to the server (LPXDebugClient always connects to port 5050)
     print(f"Connecting to LPX server at {args.host}...")
+    print("NOTE: LPXDebugClient always connects to port 5050")
     try:
-        if not client.connect(args.host):
-            print("Failed to connect to server. Check if server is running.")
+        print("DEBUG: About to call client.connect()...")
+        # Use host:port format for connection
+        server_address = f"{args.host}:5050"
+        connect_result = client.connect(server_address)
+        print(f"DEBUG: Connect result: {connect_result}")
+        if not connect_result:
+            print("Failed to connect to server. Check if server is running on port 5050.")
             return
         
         print("Connected to LPX server, receiving video stream...")
+        print("DEBUG: Connection established successfully")
         
         # Display frames in a loop
         frame_count = 0
         start_time = time.time()
+        print("DEBUG: Entering main display loop...")
         
+        loop_count = 0
         while client.isRunning():
+            loop_count += 1
+            if loop_count % 100 == 1:  # Print every 100 iterations to avoid spam
+                print(f"DEBUG: Main loop iteration {loop_count}")
+            
             # Process events and update display
-            if not client.processEvents():
+            process_result = client.processEvents()
+            if loop_count % 100 == 1:
+                print(f"DEBUG: processEvents() returned: {process_result}")
+            if not process_result:
+                print("DEBUG: processEvents() returned False, breaking loop")
                 break
             
-            # Capture WASD keys and send movement commands
-            key = cv2.waitKey(10) & 0xFF
-            deltaX, deltaY = 0, 0
-            stepSize = 10.0
-
-            if key == ord('w'):
-                deltaY = -1
-            elif key == ord('s'):
-                deltaY = 1
-            elif key == ord('a'):
-                deltaX = -1
-            elif key == ord('d'):
-                deltaX = 1
-
-            if deltaX != 0 or deltaY != 0:
-                client.sendMovementCommand(deltaX, deltaY, stepSize)
+            # WASD keyboard input is now handled directly by the C++ LPXDebugClient
+            # No need for additional keyboard handling here
 
             # Calculate and display FPS every second
             frame_count += 1
@@ -117,12 +129,13 @@ def main():
             
     except KeyboardInterrupt:
         print("\nKeyboard interrupt detected")
+        clean_exit()
     except Exception as e:
         print(f"Error: {e}")
-    finally:
-        # Skip all cleanup and just exit forcefully
-        print("Exiting program forcefully...")
-        os._exit(0)  # Force immediate exit without any cleanup
+        clean_exit()
+    
+    # Normal exit path
+    clean_exit()
 
 if __name__ == "__main__":
     main()
