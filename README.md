@@ -46,7 +46,7 @@ cmake --build . --config Release
 
 ### Python Bindings
 
-#### Option 1: Install Compiled Python Module (Recommended for Users)
+#### Option 1: Download, Compile, and Install Python Module (Recommended for Users)
 
 This method downloads the source code from GitHub, compiles it, and installs only the `lpximage` Python module. No local repository copy is created.
 
@@ -60,13 +60,13 @@ source lpximage-env/bin/activate
 sudo apt update
 sudo apt install cmake libopencv-dev python3-dev build-essential
 
-# Install the compiled lpximage Python module
+# Download source, compile and install the lpximage Python module
 pip install git+https://github.com/rascol/LPXImage.git
 ```
 
 **For macOS and Windows:**
 ```bash
-# Install the compiled lpximage Python module
+# Download source, compile and install the lpximage Python module
 pip install git+https://github.com/rascol/LPXImage.git
 ```
 
