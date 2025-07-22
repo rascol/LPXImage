@@ -46,7 +46,9 @@ cmake --build . --config Release
 
 ### Python Bindings
 
-#### Quick Install (All Platforms)
+#### Option 1: Install Compiled Python Module (Recommended for Users)
+
+This method downloads the source code from GitHub, compiles it, and installs only the `lpximage` Python module. No local repository copy is created.
 
 **For Linux (Ubuntu 22.04+ and newer distributions):**
 ```bash
@@ -58,14 +60,40 @@ source lpximage-env/bin/activate
 sudo apt update
 sudo apt install cmake libopencv-dev python3-dev build-essential
 
-# Install with pip from the repository
+# Install the compiled lpximage Python module
 pip install git+https://github.com/rascol/LPXImage.git
 ```
 
 **For macOS and Windows:**
 ```bash
-# Install with pip directly from the repository
+# Install the compiled lpximage Python module
 pip install git+https://github.com/rascol/LPXImage.git
+```
+
+After installation, you can use the module in Python:
+```python
+import lpximage
+server = lpximage.WebcamLPXServer("ScanTables63")
+```
+
+#### Option 2: Clone Repository for Development
+
+This method creates a local copy of the repository for development and modification:
+
+```bash
+# Clone the repository
+git clone https://github.com/rascol/LPXImage.git
+cd LPXImage
+
+# Install system dependencies (Linux only)
+sudo apt install cmake libopencv-dev python3-dev build-essential
+
+# Create virtual environment
+python3 -m venv lpximage-env
+source lpximage-env/bin/activate
+
+# Install from local directory
+pip install .
 ```
 
 #### Manual Build and Install
