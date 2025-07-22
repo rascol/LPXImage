@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include <queue>
 #include <set>
