@@ -48,6 +48,21 @@ cmake --build . --config Release
 
 #### Quick Install (All Platforms)
 
+**For Linux (Ubuntu 22.04+ and newer distributions):**
+```bash
+# Create a virtual environment (required for newer Ubuntu versions)
+python3 -m venv lpximage-env
+source lpximage-env/bin/activate
+
+# Install system dependencies first
+sudo apt update
+sudo apt install cmake libopencv-dev python3-dev build-essential
+
+# Install with pip from the repository
+pip install git+https://github.com/rascol/LPXImage.git
+```
+
+**For macOS and Windows:**
 ```bash
 # Install with pip directly from the repository
 pip install git+https://github.com/rascol/LPXImage.git

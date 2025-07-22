@@ -42,7 +42,19 @@ sudo apt update
 sudo apt install cmake
 sudo apt install libopencv-dev
 sudo apt install python3-dev
+sudo apt install build-essential
 sudo apt install git
+```
+
+**Important for Ubuntu 22.04+ and newer distributions:**
+Newer Ubuntu versions use "externally-managed-environment" which prevents direct pip installation. You must use a virtual environment:
+
+```bash
+# Create and activate a virtual environment
+python3 -m venv lpximage-env
+source lpximage-env/bin/activate
+
+# Now proceed with installation
 ```
 
 ## Python Dependencies
@@ -55,9 +67,31 @@ pip install -r requirements.txt
 
 ## Building and Installing
 
-### Simple Build Process (All Platforms)
+### Alternative: Quick Installation with pip
 
-The simplified build process should work for most users:
+**For Linux (Ubuntu 22.04+ and newer distributions):**
+```bash
+# Create and activate a virtual environment (required)
+python3 -m venv lpximage-env
+source lpximage-env/bin/activate
+
+# Install system dependencies first
+sudo apt update
+sudo apt install cmake libopencv-dev python3-dev build-essential
+
+# Install directly from GitHub
+pip install git+https://github.com/rascol/LPXImage.git
+```
+
+**For macOS and Windows:**
+```bash
+# Install directly from GitHub
+pip install git+https://github.com/rascol/LPXImage.git
+```
+
+### Manual Build Process (All Platforms)
+
+For more control or if pip installation doesn't work, use the manual build process:
 
 1. Clone the repository:
 ```bash
