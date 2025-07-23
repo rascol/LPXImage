@@ -485,17 +485,23 @@ LPXDebugClient::LPXDebugClient(const std::string& scanTableFile)
 LPXDebugClient::~LPXDebugClient() {
     // Stop threads but don't call disconnect() from destructor
     // as it may involve OpenCV window operations that need main thread
-    if (running) {
-        running = false;
-        
-        if (clientSocket >= 0) {
-            close(clientSocket);
-            clientSocket = -1;
+    try {
+        if (running) {
+            running = false;
+            
+            if (clientSocket >= 0) {
+                close(clientSocket);
+                clientSocket = -1;
+            }
+            
+            if (receiverThreadHandle.joinable()) {
+                receiverThreadHandle.join();
+            }
         }
-        
-        if (receiverThreadHandle.joinable()) {
-            receiverThreadHandle.join();
-        }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in LPXDebugClient destructor: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown exception in LPXDebugClient destructor" << std::endl;
     }
 }
 
@@ -555,17 +561,26 @@ void LPXDebugClient::disconnect() {
     
     running = false;
     
-    if (clientSocket >= 0) {
-        close(clientSocket);
-        clientSocket = -1;
+    try {
+        if (clientSocket >= 0) {
+            close(clientSocket);
+            clientSocket = -1;
+        }
+        
+        if (receiverThreadHandle.joinable()) {
+            receiverThreadHandle.join();
+        }
+        
+        // Cleanup OpenCV windows from main thread
+        cv::destroyWindow(windowTitle);
+        
+    } catch (const cv::Exception& e) {
+        std::cerr << "OpenCV error during disconnect: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception during disconnect: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown exception during disconnect" << std::endl;
     }
-    
-    if (receiverThreadHandle.joinable()) {
-        receiverThreadHandle.join();
-    }
-    
-    // Cleanup OpenCV windows from main thread
-    cv::destroyWindow(windowTitle);
     
     std::cout << "Disconnected from LPX server" << std::endl;
 }
