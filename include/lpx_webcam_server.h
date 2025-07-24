@@ -151,7 +151,7 @@ private:
     
     // Key throttling to prevent socket overflow
     std::chrono::steady_clock::time_point lastKeyTime;
-    static constexpr int KEY_THROTTLE_MS = 500; // Minimum 500ms between movement commands
+    static constexpr int KEY_THROTTLE_MS = 50; // Minimum 50ms between movement commands (20 Hz)
 };
 
 } // namespace lpx

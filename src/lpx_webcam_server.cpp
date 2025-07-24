@@ -605,8 +605,8 @@ void LPXDebugClient::initializeWindow() {
 
 bool LPXDebugClient::processEvents() {
     // Process UI events (must be called from main thread on macOS)
-    // Use a shorter wait time and make sure we handle UI events aggressively
-    int key = cv::waitKey(5);  // Wait a bit longer - 5ms instead of 1ms
+    // Use minimal wait time for fast response - 1ms polling for saccade-like speed
+    int key = cv::waitKey(1);  // 1ms wait for maximum responsiveness
     
     // Display new image if available (from main thread only)
     {
@@ -728,8 +728,7 @@ bool LPXDebugClient::sendMovementCommand(float deltaX, float deltaY, float stepS
         return false;
     }
     
-    // Small delay to ensure socket operation completes
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // No artificial delay - let socket operations complete naturally
     
     return true;
 }
