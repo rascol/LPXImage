@@ -618,12 +618,15 @@ bool LPXDebugClient::processEvents() {
         if (newImageAvailable && !latestImage.empty()) {
             cv::imshow(windowTitle, latestImage);
             newImageAvailable = false;
+            // Force display refresh - this is critical for macOS
+            cv::waitKey(1);
         }
     }
     
-    // Process up to 10 buffered keys per frame to reduce lag
-    for (int keyProcessCount = 0; keyProcessCount < 10; keyProcessCount++) {
-        int key = cv::waitKey(keyProcessCount == 0 ? 1 : 0);  // 1ms wait first time, 0ms after
+    // Simplified approach - always use waitKey(1) for proper display refresh
+    // Process up to 5 buffered keys per frame
+    for (int keyProcessCount = 0; keyProcessCount < 5; keyProcessCount++) {
+        int key = cv::waitKey(1);  // Always use 1ms wait for proper display refresh
         
         // Handle WASD keyboard input for movement
         if (key != -1 && key != 255) {  // A key was pressed
@@ -743,7 +746,7 @@ void LPXDebugClient::receiverThread() {
     while (running) {
         std::cout << "[DEBUG] LPXDebugClient: Attempting to receive LPXImage..." << std::endl;
         
-        // Receive an LPXImage
+        // Receive an LPXImage with timeout handling
         auto image = LPXStreamProtocol::receiveLPXImage(clientSocket, scanTables);
         
         if (!image) {

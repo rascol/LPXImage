@@ -28,6 +28,8 @@ import signal
 import sys
 import os
 import argparse
+import threading
+import subprocess
 
 def main():
     # Parse command-line arguments
@@ -83,12 +85,14 @@ def main():
         except Exception as e:
             print(f"Error disconnecting: {e}")
         print("Renderer exiting...")
-        sys.exit(0)
+        os._exit(0)  # Force exit without cleanup delays
     
     # Set up signal handler for Ctrl+C
     def signal_handler(sig, frame):
-        print("\nCtrl+C pressed, cleaning up...")
-        clean_exit()
+        print("\nCtrl+C pressed, forcing immediate exit...")
+        # Don't attempt cleanup - C++ operations may be blocking
+        # Just force exit immediately
+        os._exit(1)
     
     # Register signal handlers for various signals
     signal.signal(signal.SIGINT, signal_handler)
@@ -128,6 +132,9 @@ def main():
             if not process_result:
                 print("DEBUG: processEvents() returned False, breaking loop")
                 break
+            
+            # Small delay to prevent overwhelming the CPU and allow display updates
+            time.sleep(0.001)  # 1ms delay
             
             # WASD keyboard input is now handled directly by the C++ LPXDebugClient
             # No need for additional keyboard handling here

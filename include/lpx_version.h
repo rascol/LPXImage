@@ -7,7 +7,7 @@ namespace lpx {
     constexpr int VERSION_MINOR = 0;
     
     // Throttling configuration - clearly documented
-    constexpr int KEY_THROTTLE_MS = 50;  // 50ms reasonable throttle
+    constexpr int KEY_THROTTLE_MS = 16;  // 16ms (~60fps) for responsive WASD
     
     // Functions to get version and build info at runtime
     // These are populated automatically at compile time with actual build timestamps
