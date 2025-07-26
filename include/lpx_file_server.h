@@ -109,9 +109,11 @@ private:
     std::thread videoThreadHandle;
     std::thread networkThreadHandle;
     std::thread acceptThreadHandle;
+    std::thread commandThreadHandle;  // New thread for UDP commands
     
     // Network
-    int serverSocket;
+    int serverSocket;  // TCP socket for streaming
+    int commandSocket; // UDP socket for commands
     int port;
     
     // Video control

@@ -1,0 +1,223 @@
+(lpximage-env) parallels@ubuntu-linux-2404:~/Projects$ pip install git+https://github.com/rascol/LPXImage.git
+Collecting git+https://github.com/rascol/LPXImage.git
+  Cloning https://github.com/rascol/LPXImage.git to /tmp/pip-req-build-n201e1yr
+  Running command git clone --filter=blob:none --quiet https://github.com/rascol/LPXImage.git /tmp/pip-req-build-n201e1yr
+  Resolved https://github.com/rascol/LPXImage.git to commit 1280a14a0eb1775aeb752b3c2f030addd9c16a7d
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting numpy>=1.19.0 (from lpximage==0.1.0)
+  Using cached numpy-2.3.1-cp312-cp312-manylinux_2_28_aarch64.whl.metadata (62 kB)
+Collecting opencv-python>=4.5.0 (from lpximage==0.1.0)
+  Using cached opencv_python-4.12.0.88-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl.metadata (19 kB)
+Collecting pybind11>=2.6.0 (from lpximage==0.1.0)
+  Using cached pybind11-3.0.0-py3-none-any.whl.metadata (10.0 kB)
+Collecting numpy>=1.19.0 (from lpximage==0.1.0)
+  Using cached numpy-2.2.6-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (63 kB)
+Using cached opencv_python-4.12.0.88-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (45.9 MB)
+Using cached numpy-2.2.6-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (14.0 MB)
+Using cached pybind11-3.0.0-py3-none-any.whl (292 kB)
+Building wheels for collected packages: lpximage
+  Building wheel for lpximage (pyproject.toml) ... error
+  error: subprocess-exited-with-error
+  
+  × Building wheel for lpximage (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [186 lines of output]
+      /tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/dist.py:759: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+      !!
+      
+              ********************************************************************************
+              Please consider removing the following classifiers in favor of a SPDX license expression:
+      
+              License :: OSI Approved :: MIT License
+      
+              See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+              ********************************************************************************
+      
+      !!
+        self._finalize_license_expression()
+      running bdist_wheel
+      running build
+      running build_ext
+      -- The C compiler identification is GNU 13.3.0
+      -- The CXX compiler identification is GNU 13.3.0
+      -- Detecting C compiler ABI info
+      -- Detecting C compiler ABI info - done
+      -- Check for working C compiler: /usr/bin/cc - skipped
+      -- Detecting C compile features
+      -- Detecting C compile features - done
+      -- Detecting CXX compiler ABI info
+      -- Detecting CXX compiler ABI info - done
+      -- Check for working CXX compiler: /usr/bin/c++ - skipped
+      -- Detecting CXX compile features
+      -- Detecting CXX compile features - done
+      -- Found OpenCV: /usr (found version "4.6.0") found components: core imgproc highgui imgcodecs
+      -- OpenCV libraries: opencv_core;opencv_imgproc;opencv_highgui;opencv_imgcodecs
+      -- OpenCV include dirs: /usr/include/opencv4
+      -- Found Python: /home/parallels/Projects/lpximage-env/bin/python3 (found suitable version "3.12.3", minimum required is "3.6") found components: Interpreter Development Development.Module Development.Embed
+      -- Found Python: 3.12.3
+      -- Using FetchContent to get pybind11
+      -- pybind11 v2.12.0
+      -- Found PythonInterp: /home/parallels/Projects/lpximage-env/bin/python3 (found suitable version "3.12.3", minimum required is "3.6")
+      -- Found PythonLibs: /usr/lib/aarch64-linux-gnu/libpython3.12.so
+      -- Performing Test HAS_FLTO
+      -- Performing Test HAS_FLTO - Success
+      -- Python site-packages directory: /home/parallels/Projects/lpximage-env/lib/python3.12/site-packages
+      -- Python module will be installed to: /home/parallels/Projects/lpximage-env/lib/python3.12/site-packages
+      -- C++ library will be installed to: /home/parallels/Projects/lpximage-env/lib/python3.12/site-packages
+      -- Configuring done (2.4s)
+      -- Generating done (0.0s)
+      -- Build files have been written to: /tmp/pip-req-build-n201e1yr/build/temp.linux-aarch64-cpython-312
+      [  5%] Building CXX object CMakeFiles/lpx_image.dir/src/lpx_globals.cpp.o
+      [ 11%] Building CXX object CMakeFiles/test_opencv.dir/src/test_opencv.cpp.o
+      [ 17%] Building CXX object CMakeFiles/lpx_image.dir/src/mt_lpx_renderer.cpp.o
+      [ 23%] Building CXX object CMakeFiles/lpx_image.dir/src/mt_lpx_image.cpp.o
+      [ 29%] Linking CXX executable test_opencv
+      [ 35%] Building CXX object CMakeFiles/lpx_image.dir/src/lpx_logging.cpp.o
+      [ 41%] Building CXX object CMakeFiles/lpx_image.dir/src/lpx_webcam_server.cpp.o
+      [ 41%] Built target test_opencv
+      [ 47%] Building CXX object CMakeFiles/lpx_image.dir/src/lpx_file_server.cpp.o
+      In file included from /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:2:
+      /tmp/pip-req-build-n201e1yr/include/lpx_webcam_server.h:62:10: error: ‘condition_variable’ in namespace ‘std’ does not name a type
+         62 |     std::condition_variable frameCondition;
+            |          ^~~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/include/lpx_webcam_server.h:17:1: note: ‘std::condition_variable’ is defined in header ‘<condition_variable>’; did you forget to ‘#include <condition_variable>’?
+         16 | #include <unistd.h>
+        +++ |+#include <condition_variable>
+         17 |
+      /tmp/pip-req-build-n201e1yr/include/lpx_webcam_server.h:67:10: error: ‘condition_variable’ in namespace ‘std’ does not name a type
+         67 |     std::condition_variable lpxImageCondition;
+            |          ^~~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/include/lpx_webcam_server.h:67:5: note: ‘std::condition_variable’ is defined in header ‘<condition_variable>’; did you forget to ‘#include <condition_variable>’?
+         67 |     std::condition_variable lpxImageCondition;
+            |     ^~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp: In member function ‘void lpx::WebcamLPXServer::stop()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:196:5: error: ‘frameCondition’ was not declared in this scope
+        196 |     frameCondition.notify_all();
+            |     ^~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:197:5: error: ‘lpxImageCondition’ was not declared in this scope
+        197 |     lpxImageCondition.notify_all();
+            |     ^~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp: In member function ‘void lpx::WebcamLPXServer::captureThread(int)’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:290:17: error: ‘frameCondition’ was not declared in this scope
+        290 |                 frameCondition.notify_one();
+            |                 ^~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp: In member function ‘void lpx::WebcamLPXServer::processingThread()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:310:17: error: ‘frameCondition’ was not declared in this scope
+        310 |                 frameCondition.wait(lock);
+            |                 ^~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:341:13: error: ‘lpxImageCondition’ was not declared in this scope
+        341 |             lpxImageCondition.notify_one();
+            |             ^~~~~~~~~~~~~~~~~
+      In file included from /tmp/pip-req-build-n201e1yr/src/../include/lpx_file_server.h:6,
+                       from /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp:2:
+      /tmp/pip-req-build-n201e1yr/src/../include/../include/lpx_webcam_server.h:62:10: error: ‘condition_variable’ in namespace ‘std’ does not name a type
+         62 |     std::condition_variable frameCondition;
+            |          ^~~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/../include/../include/lpx_webcam_server.h:17:1: note: ‘std::condition_variable’ is defined in header ‘<condition_variable>’; did you forget to ‘#include <condition_variable>’?
+         16 | #include <unistd.h>
+        +++ |+#include <condition_variable>
+         17 |
+      /tmp/pip-req-build-n201e1yr/src/../include/../include/lpx_webcam_server.h:67:10: error: ‘condition_variable’ in namespace ‘std’ does not name a type
+         67 |     std::condition_variable lpxImageCondition;
+            |          ^~~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/../include/../include/lpx_webcam_server.h:67:5: note: ‘std::condition_variable’ is defined in header ‘<condition_variable>’; did you forget to ‘#include <condition_variable>’?
+         67 |     std::condition_variable lpxImageCondition;
+            |     ^~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp: In member function ‘void lpx::WebcamLPXServer::networkThread()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_webcam_server.cpp:363:17: error: ‘lpxImageCondition’ was not declared in this scope
+        363 |                 lpxImageCondition.wait(lock);
+            |                 ^~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/../include/lpx_file_server.h:99:10: error: ‘condition_variable’ in namespace ‘std’ does not name a type
+         99 |     std::condition_variable lpxImageCondition;
+            |          ^~~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/../include/lpx_file_server.h:7:1: note: ‘std::condition_variable’ is defined in header ‘<condition_variable>’; did you forget to ‘#include <condition_variable>’?
+          6 | #include "../include/lpx_webcam_server.h"  // Reuse protocol from webcam server
+        +++ |+#include <condition_variable>
+          7 | #include <opencv2/opencv.hpp>
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp: In member function ‘void lpx::FileLPXServer::stop()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp:188:5: error: ‘lpxImageCondition’ was not declared in this scope
+        188 |     lpxImageCondition.notify_all();
+            |     ^~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp: In member function ‘void lpx::FileLPXServer::videoThread()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp:349:13: error: ‘lpxImageCondition’ was not declared in this scope
+        349 |             lpxImageCondition.notify_one();
+            |             ^~~~~~~~~~~~~~~~~
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp: In member function ‘void lpx::FileLPXServer::networkThread()’:
+      /tmp/pip-req-build-n201e1yr/src/lpx_file_server.cpp:382:17: error: ‘lpxImageCondition’ was not declared in this scope
+        382 |                 lpxImageCondition.wait(lock);
+            |                 ^~~~~~~~~~~~~~~~~
+      gmake[2]: *** [CMakeFiles/lpx_image.dir/build.make:132: CMakeFiles/lpx_image.dir/src/lpx_webcam_server.cpp.o] Error 1
+      gmake[2]: *** Waiting for unfinished jobs....
+      gmake[2]: *** [CMakeFiles/lpx_image.dir/build.make:146: CMakeFiles/lpx_image.dir/src/lpx_file_server.cpp.o] Error 1
+      gmake[1]: *** [CMakeFiles/Makefile2:127: CMakeFiles/lpx_image.dir/all] Error 2
+      gmake: *** [Makefile:136: all] Error 2
+      Traceback (most recent call last):
+        File "/home/parallels/Projects/lpximage-env/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 353, in <module>
+          main()
+        File "/home/parallels/Projects/lpximage-env/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 335, in main
+          json_out['return_val'] = hook(**hook_input['kwargs'])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/home/parallels/Projects/lpximage-env/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 251, in build_wheel
+          return _build_backend().build_wheel(wheel_directory, config_settings,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 435, in build_wheel
+          return _build(['bdist_wheel', '--dist-info-dir', str(metadata_directory)])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 423, in _build
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 404, in _build_with_temp_dir
+          self.run_setup()
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 512, in run_setup
+          super().run_setup(setup_script=setup_script)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 94, in <module>
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/__init__.py", line 115, in setup
+          return distutils.core.setup(**attrs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 186, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 202, in run_commands
+          dist.run_commands()
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1002, in run_commands
+          self.run_command(cmd)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1102, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/command/bdist_wheel.py", line 370, in run
+          self.run_command("build")
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 357, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1102, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build.py", line 135, in run
+          self.run_command(cmd_name)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 357, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1102, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-68_q34p1/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "<string>", line 28, in run
+        File "<string>", line 85, in build_extension
+        File "/usr/lib/python3.12/subprocess.py", line 413, in check_call
+          raise CalledProcessError(retcode, cmd)
+      subprocess.CalledProcessError: Command '['cmake', '--build', '.', '--config', 'Release', '--', '-j4']' returned non-zero exit status 2.
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed building wheel for lpximage
+Failed to build lpximage
+ERROR: Could not build wheels for lpximage, which is required to install pyproject.toml-based projects
+(lpximage-env) parallels@ubuntu-linux-2404:~/Projects$ cmake --version
+cmake version 3.28.3
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+

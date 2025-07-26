@@ -1,0 +1,158 @@
+# Additional timing diagnostics for scan functions
+# This patch adds detailed timing to multithreadedScanFromImage and processImageRegion
+
+--- a/src/multithreaded_scan.cpp
++++ b/src/multithreaded_scan.cpp
+@@ -1,6 +1,7 @@
+ #include "../include/multithreaded_scan.h"
+ #include <iostream>
+ #include <chrono>
++#include <iomanip>
+ #include <thread>
+ #include <vector>
+ #include <future>
+@@ -8,6 +9,16 @@
+ 
+ namespace lpx {
+ 
++// Timing helper function (if not already defined)
++#ifndef TIMING_HELPERS_DEFINED
++#define TIMING_HELPERS_DEFINED
++void logScanTiming(const std::string& operation, std::chrono::high_resolution_clock::time_point start) {
++    auto end = std::chrono::high_resolution_clock::now();
++    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
++    std::cout << "[SCAN-TIMING] " << operation << " took: " << duration << "μs (" 
++              << std::fixed << std::setprecision(2) << (duration / 1000.0) << "ms)" << std::endl;
++}
++#endif
++
+ std::shared_ptr<LPXImage> multithreadedScanFromImage(const cv::Mat& inputImage, 
+                                                      float centerX, float centerY) {
+     if (!g_scanTables || !g_scanTables->isInitialized()) {
+@@ -15,6 +26,9 @@ std::shared_ptr<LPXImage> multithreadedScanFromImage(const cv::Mat& inputImage,
+         return nullptr;
+     }
+     
++    std::cout << "[SCAN-TIMING] Starting multithreadedScanFromImage..." << std::endl;
++    auto totalScanStart = std::chrono::high_resolution_clock::now();
++    
+     int imageWidth = inputImage.cols;
+     int imageHeight = inputImage.rows;
+     
+@@ -22,24 +36,36 @@ std::shared_ptr<LPXImage> multithreadedScanFromImage(const cv::Mat& inputImage,
+     int outputHeight = g_scanTables->getOutputHeight();
+     
+     // Initialize output image
++    auto initStart = std::chrono::high_resolution_clock::now();
+     auto lpxImage = std::make_shared<LPXImage>(outputWidth, outputHeight);
+     if (!lpxImage || !lpxImage->getData()) {
+         std::cerr << "Failed to create LPXImage" << std::endl;
+         return nullptr;
+     }
++    logScanTiming("LPXImage initialization", initStart);
+     
+     // Get fovea region
++    auto foveaStart = std::chrono::high_resolution_clock::now();
+     auto foveaRegion = g_scanTables->getFoveaRegion();
+     if (!foveaRegion) {
+         std::cerr << "Failed to get fovea region" << std::endl;
+         return nullptr;
+     }
++    logScanTiming("Fovea region retrieval", foveaStart);
+     
+     // Process fovea region first
++    auto foveaProcessStart = std::chrono::high_resolution_clock::now();
+     internal::processImageRegion(inputImage, lpxImage, foveaRegion, centerX, centerY, 
+                                 imageWidth, imageHeight, outputWidth, outputHeight);
++    logScanTiming("Fovea region processing", foveaProcessStart);
+     
+     // Get peripheral regions
++    auto peripheralRetrievalStart = std::chrono::high_resolution_clock::now();
+     auto peripheralRegions = g_scanTables->getPeripheralRegions();
++    auto peripheralRetrievalEnd = std::chrono::high_resolution_clock::now();
++    auto peripheralCount = peripheralRegions ? peripheralRegions->size() : 0;
++    std::cout << "[SCAN-TIMING] Retrieved " << peripheralCount << " peripheral regions in " 
++              << std::chrono::duration_cast<std::chrono::microseconds>(peripheralRetrievalEnd - peripheralRetrievalStart).count() << "μs" << std::endl;
+     
+     if (peripheralRegions && !peripheralRegions->empty()) {
+         // For now, process peripheral regions sequentially to avoid sync overhead
+@@ -47,15 +73,23 @@ std::shared_ptr<LPXImage> multithreadedScanFromImage(const cv::Mat& inputImage,
+         // TODO: Consider parallel processing if regions are large enough to justify overhead
+         
+         std::cout << "[DEBUG] Processing " << peripheralRegions->size() << " peripheral regions sequentially" << std::endl;
++        auto peripheralProcessStart = std::chrono::high_resolution_clock::now();
+         
+         for (const auto& region : *peripheralRegions) {
++            auto regionStart = std::chrono::high_resolution_clock::now();
+             internal::processImageRegion(inputImage, lpxImage, region, centerX, centerY,
+                                        imageWidth, imageHeight, outputWidth, outputHeight);
++            auto regionDuration = std::chrono::duration_cast<std::chrono::microseconds>(
++                std::chrono::high_resolution_clock::now() - regionStart).count();
++            if (regionDuration > 10000) {  // Log if region takes more than 10ms
++                std::cout << "[SCAN-TIMING] Peripheral region took: " << (regionDuration/1000.0) << "ms (slow!)" << std::endl;
++            }
+         }
++        
++        logScanTiming("All peripheral regions processing", peripheralProcessStart);
+     }
+     
+-    std::cout << "[DEBUG] multithreadedScanFromImage completed" << std::endl;
+-    return lpxImage;
++    logScanTiming("multithreadedScanFromImage total", totalScanStart);
++    return lpxImage;
+ }
+ 
+ std::shared_ptr<LPXImage> multithreadedScanImage(const cv::Mat& inputImage, 
+@@ -68,6 +102,9 @@ std::shared_ptr<LPXImage> multithreadedScanImage(const cv::Mat& inputImage,
+ namespace internal {
+ 
+ void processImageRegion(const cv::Mat& inputImage, std::shared_ptr<LPXImage> outputImage,
+                        std::shared_ptr<ScanRegion> region, float centerX, float centerY,
+                        int imageWidth, int imageHeight, int outputWidth, int outputHeight) {
++    auto regionProcessStart = std::chrono::high_resolution_clock::now();
++    
+     if (!region || !outputImage) {
+         std::cerr << "[ERROR] processImageRegion: Invalid region or output image" << std::endl;
+         return;
+@@ -75,6 +112,9 @@ void processImageRegion(const cv::Mat& inputImage, std::shared_ptr<LPXImage> ou
+     
+     // Get scan table for this region
++    auto scanTableStart = std::chrono::high_resolution_clock::now();
+     auto scanTable = region->getScanTable();
++    auto scanTableDuration = std::chrono::duration_cast<std::chrono::microseconds>(
++        std::chrono::high_resolution_clock::now() - scanTableStart).count();
++    
+     if (!scanTable || scanTable->empty()) {
+         std::cerr << "[ERROR] processImageRegion: Invalid or empty scan table" << std::endl;
+         return;
+@@ -82,6 +122,11 @@ void processImageRegion(const cv::Mat& inputImage, std::shared_ptr<LPXImage> ou
+     
+     uint8_t* outputData = outputImage->getData();
+     
++    // Log scan table access time if significant
++    if (scanTableDuration > 1000) {  // Log if scan table access takes more than 1ms
++        std::cout << "[SCAN-TIMING] Scan table access took: " << (scanTableDuration/1000.0) << "ms" << std::endl;
++    }
++    
++    auto pixelProcessStart = std::chrono::high_resolution_clock::now();
++    int pixelsProcessed = 0;
++    
+     // Process each entry in the scan table
+     for (const auto& entry : *scanTable) {
+         // Calculate source coordinates with center offset
+@@ -115,7 +160,14 @@ void processImageRegion(const cv::Mat& inputImage, std::shared_ptr<LPXImage> ou
+             outputData[outputIndex * 3 + 0] = inputImage.at<cv::Vec3b>(srcY, srcX)[2]; // R
+             outputData[outputIndex * 3 + 1] = inputImage.at<cv::Vec3b>(srcY, srcX)[1]; // G
+             outputData[outputIndex * 3 + 2] = inputImage.at<cv::Vec3b>(srcY, srcX)[0]; // B
++            pixelsProcessed++;
+         }
+     }
++    
++    auto regionProcessEnd = std::chrono::high_resolution_clock::now();
++    auto regionDuration = std::chrono::duration_cast<std::chrono::microseconds>(regionProcessEnd - regionProcessStart).count();
++    
++    std::cout << "[SCAN-TIMING] Processed " << pixelsProcessed << " pixels in " 
++              << (regionDuration/1000.0) << "ms (" << (pixelsProcessed*1000.0/regionDuration) << " pixels/ms)" << std::endl;
+ }
+ 
+ } // namespace internal

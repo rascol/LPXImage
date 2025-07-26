@@ -13,6 +13,7 @@
 #include "../include/lpx_mt.h"
 #include "../include/lpx_webcam_server.h"
 #include "../include/lpx_file_server.h"  // Include file server header
+#include "../include/lpx_version.h"       // Include version header
 #include <opencv2/opencv.hpp>
 #include <cstring>
 #include <iostream>
@@ -200,4 +201,13 @@ PYBIND11_MODULE(lpximage, m) {
                 return false;
             }
         }, py::arg("deltaX"), py::arg("deltaY"), py::arg("stepSize") = 10.0f);
+    
+    // Version information functions - timestamp-based versioning
+    m.def("getVersionString", &lpx::getVersionString, "Get version string with build timestamp");
+    m.def("getBuildTimestamp", &lpx::getBuildTimestamp, "Get full build timestamp (date and time)");
+    m.def("getBuildDate", &lpx::getBuildDate, "Get build date only");
+    m.def("getBuildTime", &lpx::getBuildTime, "Get build time only");
+    m.def("getBuildNumber", &lpx::getBuildNumber, "Get build number (hash of timestamp for legacy compatibility)");
+    m.def("getKeyThrottleMs", &lpx::getKeyThrottleMs, "Get key throttle milliseconds");
+    m.def("printBuildInfo", &lpx::printBuildInfo, "Print build information");
 }

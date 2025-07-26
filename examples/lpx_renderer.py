@@ -13,6 +13,16 @@ except ModuleNotFoundError:
     print("  2. Install the Python module with pip or add it to your PYTHONPATH")
     import sys
     sys.exit(1)
+
+# Helper function to get version info with fallback
+def get_version_info():
+    try:
+        version = lpximage.getVersionString()
+        build = lpximage.getBuildNumber()
+        throttle = lpximage.getKeyThrottleMs()
+        return version, build, throttle
+    except AttributeError:
+        return "Unknown", "Unknown", "Unknown"
 import time
 import signal
 import sys
@@ -29,8 +39,12 @@ def main():
     parser.add_argument('--scale', type=float, default=1.0, help='Rendering scale factor')
     args = parser.parse_args()
     
-    # Print startup info
-    print(f"LPXImage Renderer - Receiving and displaying LPX video")
+    # Print startup info with version
+    version, build, throttle = get_version_info()
+    print("=" * 60)
+    print(f"LPXImage Renderer v{version} (Build {build})")
+    print(f"Key Throttle: {throttle}ms")
+    print("=" * 60)
     print(f"Connecting to: {args.host}")
     print(f"Window size: {args.width}x{args.height}")
     print(f"Scan Tables: {args.tables}")

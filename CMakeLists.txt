@@ -53,6 +53,7 @@ add_library(lpx_image SHARED
     src/lpx_logging.cpp
     src/lpx_webcam_server.cpp
     src/lpx_file_server.cpp  # Added file server implementation
+    src/lpx_version.cpp      # Added version tracking
 )
 
 # This ensures that executable targets can see the symbols from the lpx_image library
@@ -111,6 +112,9 @@ if(BUILD_PYTHON_BINDINGS)
     # Add the python subdirectory
     add_subdirectory(python)
 endif()
+
+# Pre-install cleanup to forcefully remove old libraries
+install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/pre_install_cleanup.cmake)")
 
 # Configure enhanced clean script that also uninstalls
 configure_file(

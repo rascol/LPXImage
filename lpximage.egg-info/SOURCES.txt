@@ -1,0 +1,9 @@
+LICENSE.md
+README.md
+setup.py
+lpximage.egg-info/PKG-INFO
+lpximage.egg-info/SOURCES.txt
+lpximage.egg-info/dependency_links.txt
+lpximage.egg-info/not-zip-safe
+lpximage.egg-info/requires.txt
+lpximage.egg-info/top_level.txt

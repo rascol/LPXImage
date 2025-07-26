@@ -1,0 +1,12 @@
+objc[74699]: Class CaptureDelegate is implemented in both /Users/ray/Anaconda/anaconda3/lib/python3.11/site-packages/cv2/cv2.abi3.so (0x12b85e518) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_videoio.4.11.0.dylib (0x12e720848). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[74699]: Class CVWindow is implemented in both /Users/ray/Anaconda/anaconda3/lib/python3.11/site-packages/cv2/cv2.abi3.so (0x12b85e568) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x12e1ecb28). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[74699]: Class CVView is implemented in both /Users/ray/Anaconda/anaconda3/lib/python3.11/site-packages/cv2/cv2.abi3.so (0x12b85e590) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x12e1ecb50). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[74699]: Class CVSlider is implemented in both /Users/ray/Anaconda/anaconda3/lib/python3.11/site-packages/cv2/cv2.abi3.so (0x12b85e5b8) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x12e1ecb78). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+Opened video file: ../2342260-hd_1920_1080_30fps.mp4
+Video properties: 1920x1080, 29.97 FPS, 366 frames
+Output size: 1920x1080
+Target FPS: 30
+Looping: Yes
+Center offset: (0, 0)
+FileLPXServer started on port 5050
+Frame delay: 33.3333ms

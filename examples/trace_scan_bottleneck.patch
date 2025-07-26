@@ -1,0 +1,140 @@
+--- a/src/mt_lpx_image.cpp
++++ b/src/mt_lpx_image.cpp
+@@ -567,13 +567,22 @@ bool LPXImage::scanFromImage(const cv::Mat& image, float x_center, float y_cent
+ // Multithreaded implementation of scanFromImage
+ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float x_center, float y_center) {
+     std::cout << "[SCAN-TIMING] Starting multithreadedScanFromImage..." << std::endl;
+-    auto totalScanStart = std::chrono::high_resolution_clock::now();
++    auto overallStart = std::chrono::high_resolution_clock::now();
+     
++    std::cout << "[SCAN-TRACE] Validating inputs..." << std::endl;
++    auto validationStart = std::chrono::high_resolution_clock::now();
++    
+     auto sct = lpxImage->getScanTables();
+     if (!sct || !sct->isInitialized() || image.empty()) {
+         std::cerr << "ERROR: Invalid scan tables or image" << std::endl;
+         return false;
+     }
++    
++    auto validationEnd = std::chrono::high_resolution_clock::now(); 
++    auto validationTime = std::chrono::duration_cast<std::chrono::microseconds>(validationEnd - validationStart).count();
++    std::cout << "[SCAN-TRACE] Input validation took: " << validationTime << "μs" << std::endl;
++    
++    std::cout << "[SCAN-TRACE] Getting access to internal arrays..." << std::endl;
+     
+     // Set position in the LPXImage
+     lpxImage->setPosition(x_center, y_center);
+@@ -587,6 +596,9 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+     
+     // Get max cells
+     int nMaxCells = lpxImage->getMaxCells();
++    std::cout << "[SCAN-TRACE] nMaxCells: " << nMaxCells << std::endl;
++    
++    std::cout << "[SCAN-TRACE] Resetting accumulators..." << std::endl;
+     
+     // Reset accumulators
+     std::fill(accR.begin(), accR.end(), 0);
+@@ -594,6 +606,10 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+     std::fill(accB.begin(), accB.end(), 0);
+     std::fill(count.begin(), count.end(), 0);
+     
++    auto setupEnd = std::chrono::high_resolution_clock::now();
++    auto setupTime = std::chrono::duration_cast<std::chrono::microseconds>(setupEnd - overallStart).count();
++    std::cout << "[SCAN-TRACE] Setup phase took: " << setupTime << "μs" << std::endl;
++    
+     // Start the multithreaded scanning approach
+     // std::cout << "Using multithreaded scanning approach" << std::endl;
+     
+@@ -604,11 +620,15 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+     int scanMapCenterY = h_m / 2;
+     
+     // STEP 1: Process the fovea region first in the main thread
+-    // std::cout << "Processing fovea region from 0 to " << sct->lastFoveaIndex << std::endl;
++    std::cout << "[SCAN-TRACE] Processing fovea region (innerLength: " << sct->innerLength << ")..." << std::endl;
++    auto foveaStart = std::chrono::high_resolution_clock::now();
++    
+     int foveaCellsUpdated = 0;
+     
+     // Process each inner cell directly
+     for (int i = 0; i < sct->innerLength; i++) {
++        // Add progress tracking for very large fovea processing
++        
+         // Adjust coordinates to be center-based
+         // Assuming the scan table coordinates are centered at scan map center
+         int adjustedX = sct->innerCells[i].x - scanMapCenterX;
+@@ -655,6 +675,11 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+         }
+     }
+     
++    auto foveaEnd = std::chrono::high_resolution_clock::now();
++    auto foveaTime = std::chrono::duration_cast<std::chrono::milliseconds>(foveaEnd - foveaStart).count();
++    std::cout << "[SCAN-TRACE] Fovea processing took: " << foveaTime << "ms (updated " << foveaCellsUpdated << " cells)" << std::endl;
++    
++    std::cout << "[SCAN-TRACE] Calculating bounding box for peripheral processing..." << std::endl;
+     // STEP 2: Process the rest of the image using single thread for better performance
+     // Thread creation/destruction overhead was causing sync delays
+     
+@@ -665,19 +690,35 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+     // Get bounding box for processing
+     lpx::Rect box = internal::getScannedBox(x_center, y_center, image.cols, image.rows, nMaxCells, sct->spiralPer, sct);
+     
+-    auto startTime = std::chrono::high_resolution_clock::now();
++    int boxWidth = box.xMax - box.xMin;
++    int boxHeight = box.yMax - box.yMin;
++    int totalPixelsToProcess = boxWidth * boxHeight;
++    std::cout << "[SCAN-TRACE] Bounding box: (" << box.xMin << "," << box.yMin << ") to (" << box.xMax << "," << box.yMax << ")" << std::endl;
++    std::cout << "[SCAN-TRACE] Processing " << totalPixelsToProcess << " pixels in peripheral region..." << std::endl;
++    
++    auto peripheralStart = std::chrono::high_resolution_clock::now();
+     
+     // Process directly without thread overhead
+     std::mutex dummyMutex;
+     internal::processImageRegion(image, box.yMin, box.yMax, 
+                             x_center, y_center, sct, 
+                             accR, accG, accB, count, dummyMutex);
+     
+-    
+-    auto endTime = std::chrono::high_resolution_clock::now();
+-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+-    // std::cout << "Multithreaded processing completed in " << duration << " ms using " << numThreads << " threads" << std::endl;
++    auto peripheralEnd = std::chrono::high_resolution_clock::now();
++    auto peripheralTime = std::chrono::duration_cast<std::chrono::milliseconds>(peripheralEnd - peripheralStart).count();
++    std::cout << "[SCAN-TRACE] Peripheral processing took: " << peripheralTime << "ms" << std::endl;
++    
++    if (totalPixelsToProcess > 0) {
++        float pixelsPerMs = (float)totalPixelsToProcess / (float)peripheralTime;
++        std::cout << "[SCAN-TRACE] Processing rate: " << pixelsPerMs << " pixels/ms" << std::endl;
++    }
++    
++    std::cout << "[SCAN-TRACE] Computing final cell colors..." << std::endl;
++    auto colorComputeStart = std::chrono::high_resolution_clock::now();
+ 
+     // Calculate average colors for each cell
++    int processedCells = 0;
++    int skippedCells = 0;
+     int nonZeroCells = 0;
+     for (int i = 0; i < nMaxCells; i++) {
+         // Use accumulated color values for cells that were scanned
+@@ -687,12 +728,22 @@ bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float
+             int b = accB[i] / count[i];
+             cellArray[i] = packColor(r, g, b);
+             nonZeroCells++;
++            processedCells++;
+         } else if (i <= sct->lastFoveaIndex) {
+             // Don't clear fovea cells that were directly populated!
+             // (No action needed)
++            skippedCells++;
+         } else {
+             cellArray[i] = 0; // Black for cells without pixels
++            processedCells++;
+         }
++    }
++    
++    auto colorComputeEnd = std::chrono::high_resolution_clock::now();
++    auto colorComputeTime = std::chrono::duration_cast<std::chrono::milliseconds>(colorComputeEnd - colorComputeStart).count();
++    std::cout << "[SCAN-TRACE] Color computation took: " << colorComputeTime << "ms" << std::endl;
++    std::cout << "[SCAN-TRACE] Final stats - processed: " << processedCells << ", skipped: " << skippedCells << ", non-zero: " << nonZeroCells << std::endl;
++    
+     }
+     
+     // Set the length

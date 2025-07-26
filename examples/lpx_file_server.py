@@ -14,6 +14,16 @@ except ModuleNotFoundError:
     print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
     sys.exit(1)
 
+# Helper function to get version info with fallback
+def get_version_info():
+    try:
+        version = lpximage.getVersionString()
+        build = lpximage.getBuildNumber()
+        throttle = lpximage.getKeyThrottleMs()
+        return version, build, throttle
+    except AttributeError:
+        return "Unknown", "Unknown", "Unknown"
+
 # Global variables
 server = None
 should_exit = False
@@ -50,8 +60,12 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    # Print startup info
-    print(f"LPXImage File Server - Streaming video with log-polar processing")
+    # Print startup info with version
+    version, build, throttle = get_version_info()
+    print("=" * 60)
+    print(f"LPX File Server v{version} (Build {build})")
+    print(f"Key Throttle: {throttle}ms")
+    print("=" * 60)
     print(f"Video file: {args.file}")
     print(f"Output resolution: {args.width}x{args.height}")
     print(f"Scan Tables: {args.tables}")
@@ -65,11 +79,14 @@ def main():
     try:
         # Initialize the server with scan tables
         print("DEBUG: About to create FileLPXServer...")
+        create_start = time.time()
         server = lpximage.FileLPXServer(args.tables, args.port)
-        print("DEBUG: FileLPXServer created successfully")
+        create_time = time.time() - create_start
+        print(f"DEBUG: FileLPXServer created successfully in {create_time*1000:.1f}ms")
         
         # Configure the server
         print("DEBUG: Configuring server...")
+        config_start = time.time()
         if args.fps > 0:
             print(f"DEBUG: Setting FPS to {args.fps}")
             server.setFPS(args.fps)
@@ -77,17 +94,22 @@ def main():
         server.setLooping(args.loop)
         print(f"DEBUG: Setting center offset to ({args.x_offset}, {args.y_offset})")
         server.setCenterOffset(args.x_offset, args.y_offset)
+        config_time = time.time() - config_start
+        print(f"DEBUG: Server configuration completed in {config_time*1000:.1f}ms")
         
         # Start the server with the video file
         print(f"DEBUG: About to start server with file: {args.file}")
         print(f"DEBUG: Using dimensions: {args.width}x{args.height}")
+        start_begin = time.time()
         start_result = server.start(args.file, args.width, args.height)
-        print(f"DEBUG: Server start result: {start_result}")
+        start_time = time.time() - start_begin
+        print(f"DEBUG: Server start result: {start_result} (took {start_time*1000:.1f}ms)")
         if not start_result:
             print("Failed to start LPX file server. Check the video file path.")
             return
         
         print(f"Server started and streaming video on port {args.port}")
+        print("Server started successfully")  # Ready signal for test script
         print("Waiting for clients to connect...")
         
         # Main server loop - report status periodically with shorter delays

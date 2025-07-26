@@ -469,7 +469,12 @@ void WebcamLPXServer::adjustSkipRate(float processingTime, bool hasMotion) {
 
 // LPXDebugClient implementation
 LPXDebugClient::LPXDebugClient(const std::string& scanTableFile)
-    : clientSocket(-1), running(false), lastKeyTime(std::chrono::steady_clock::now()) {
+    : clientSocket(-1), running(false), lastKeyTime(std::chrono::steady_clock::now() - std::chrono::milliseconds(KEY_THROTTLE_MS + 1)) {
+    
+    // Log version information
+    std::cout << "[VERSION] LPXDebugClient v" << getVersionString() << std::endl;
+    std::cout << "[VERSION] Built: " << getBuildTimestamp() << std::endl;
+    std::cout << "[VERSION] Key throttle: " << getKeyThrottleMs() << "ms" << std::endl;
     
     // Initialize scan tables
     scanTables = std::make_shared<LPXTables>(scanTableFile);
@@ -605,8 +610,7 @@ void LPXDebugClient::initializeWindow() {
 
 bool LPXDebugClient::processEvents() {
     // Process UI events (must be called from main thread on macOS)
-    // Use minimal wait time for fast response - 1ms polling for saccade-like speed
-    int key = cv::waitKey(1);  // 1ms wait for maximum responsiveness
+    // Process multiple keys in a single frame to drain keyboard buffer
     
     // Display new image if available (from main thread only)
     {
@@ -614,61 +618,60 @@ bool LPXDebugClient::processEvents() {
         if (newImageAvailable && !latestImage.empty()) {
             cv::imshow(windowTitle, latestImage);
             newImageAvailable = false;
-            std::cout << "Main thread displayed new image" << std::endl;
         }
     }
     
-    // Handle WASD keyboard input for movement
-    if (key != -1 && key != 255) {  // A key was pressed
-        float deltaX = 0, deltaY = 0;
-        float stepSize = 10.0f;
-        bool shouldSendCommand = false;
+    // Process up to 10 buffered keys per frame to reduce lag
+    for (int keyProcessCount = 0; keyProcessCount < 10; keyProcessCount++) {
+        int key = cv::waitKey(keyProcessCount == 0 ? 1 : 0);  // 1ms wait first time, 0ms after
         
-        switch (key) {
-            case 'w':
-            case 'W':
-                deltaY = -1;
-                shouldSendCommand = true;
-                std::cout << "W pressed - moving up" << std::endl;
-                break;
-            case 's':
-            case 'S':
-                deltaY = 1;
-                shouldSendCommand = true;
-                std::cout << "S pressed - moving down" << std::endl;
-                break;
-            case 'a':
-            case 'A':
-                deltaX = -1;
-                shouldSendCommand = true;
-                std::cout << "A pressed - moving left" << std::endl;
-                break;
-            case 'd':
-            case 'D':
-                deltaX = 1;
-                shouldSendCommand = true;
-                std::cout << "D pressed - moving right" << std::endl;
-                break;
-            case 27: // ESC key
-            case 'q':
-            case 'Q':
-                std::cout << "Exit key pressed" << std::endl;
-                running = false;
-                return false;
-        }
-        
-        // Send movement command if any movement was detected and throttling allows
-        if (shouldSendCommand && (deltaX != 0 || deltaY != 0)) {
-            auto now = std::chrono::steady_clock::now();
-            auto timeSinceLastKey = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyTime).count();
+        // Handle WASD keyboard input for movement
+        if (key != -1 && key != 255) {  // A key was pressed
+            float deltaX = 0, deltaY = 0;
+            float stepSize = 10.0f;
+            bool shouldSendCommand = false;
             
-            if (timeSinceLastKey >= KEY_THROTTLE_MS) {
-                std::cout << "Sending movement command: deltaX=" << deltaX << ", deltaY=" << deltaY << ", stepSize=" << stepSize << std::endl;
-                sendMovementCommand(deltaX, deltaY, stepSize);
-                lastKeyTime = now;
-            } else {
-                std::cout << "Key throttled (" << timeSinceLastKey << "ms < " << KEY_THROTTLE_MS << "ms)" << std::endl;
+            switch (key) {
+                case 'w':
+                case 'W':
+                    deltaY = -1;
+                    shouldSendCommand = true;
+                    break;
+                case 's':
+                case 'S':
+                    deltaY = 1;
+                    shouldSendCommand = true;
+                    break;
+                case 'a':
+                case 'A':
+                    deltaX = -1;
+                    shouldSendCommand = true;
+                    break;
+                case 'd':
+                case 'D':
+                    deltaX = 1;
+                    shouldSendCommand = true;
+                    break;
+                case 27: // ESC key
+                case 'q':
+                case 'Q':
+                    running = false;
+                    return false;
             }
+            
+            // Send movement command if any movement was detected and throttling allows
+            if (shouldSendCommand && (deltaX != 0 || deltaY != 0)) {
+                auto now = std::chrono::steady_clock::now();
+                auto timeSinceLastKey = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyTime).count();
+                
+                if (timeSinceLastKey >= KEY_THROTTLE_MS) {
+                    sendMovementCommand(deltaX, deltaY, stepSize);
+                    lastKeyTime = now;
+                }
+            }
+        } else {
+            // No key pressed, break from key processing loop
+            break;
         }
     }
     

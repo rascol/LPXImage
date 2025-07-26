@@ -3,6 +3,7 @@
 
 #include "../include/lpx_mt.h"
 #include "../include/lpx_renderer.h"
+#include "../include/lpx_version.h"
 #include <opencv2/opencv.hpp>
 #include <thread>
 #include <mutex>
@@ -151,7 +152,8 @@ private:
     
     // Key throttling to prevent socket overflow
     std::chrono::steady_clock::time_point lastKeyTime;
-    static constexpr int KEY_THROTTLE_MS = 50; // Minimum 50ms between movement commands (20 Hz)
+    // Use centralized throttling constant
+    static constexpr int KEY_THROTTLE_MS = lpx::KEY_THROTTLE_MS;
 };
 
 } // namespace lpx
