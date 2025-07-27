@@ -154,6 +154,14 @@ private:
     std::chrono::steady_clock::time_point lastKeyTime;
     // Use centralized throttling constant
     static constexpr int KEY_THROTTLE_MS = lpx::KEY_THROTTLE_MS;
+    
+    // Frame synchronization - only one command per frame
+    std::mutex pendingCommandMutex;
+    bool hasPendingCommand = false;
+    float pendingDeltaX = 0.0f;
+    float pendingDeltaY = 0.0f;
+    float pendingStepSize = 10.0f;
+    std::atomic<bool> canSendCommand{true};  // Only true after receiving a frame
 };
 
 } // namespace lpx

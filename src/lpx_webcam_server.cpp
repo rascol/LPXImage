@@ -4,6 +4,7 @@
 #include <chrono>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <netinet/tcp.h>  // For TCP_NODELAY
 
 namespace lpx {
 
@@ -552,6 +553,18 @@ bool LPXDebugClient::connect(const std::string& serverAddress, int port) {
         return false;
     }
     
+    // Configure socket for low-latency command transmission
+    int flag = 1;
+    if (setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) < 0) {
+        std::cerr << "Warning: Failed to set TCP_NODELAY on client socket" << std::endl;
+    }
+    
+    // Set receive buffer size to handle bursts of data
+    int recvBuf = 256 * 1024; // 256KB receive buffer
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_RCVBUF, &recvBuf, sizeof(recvBuf)) < 0) {
+        std::cerr << "Warning: Failed to set receive buffer size" << std::endl;
+    }
+    
     running = true;
     
     // Start receiver thread
@@ -618,42 +631,50 @@ bool LPXDebugClient::processEvents() {
         if (newImageAvailable && !latestImage.empty()) {
             cv::imshow(windowTitle, latestImage);
             newImageAvailable = false;
-            // Force display refresh - this is critical for macOS
-            cv::waitKey(1);
+            // Don't call waitKey here - it will be called below
         }
     }
     
-    // Simplified approach - always use waitKey(1) for proper display refresh
-    // Process up to 5 buffered keys per frame
-    for (int keyProcessCount = 0; keyProcessCount < 5; keyProcessCount++) {
-        int key = cv::waitKey(1);  // Always use 1ms wait for proper display refresh
+    // Process only ONE key per frame to prevent blocking
+    static int totalKeysProcessed = 0;
+    static int totalCommandsSent = 0;
+    static int throttledCommands = 0;
+    
+    // Call waitKey only once per frame
+    int key = cv::waitKey(1);  // This handles both display refresh and keyboard input
         
         // Handle WASD keyboard input for movement
         if (key != -1 && key != 255) {  // A key was pressed
+            totalKeysProcessed++;
             float deltaX = 0, deltaY = 0;
             float stepSize = 10.0f;
             bool shouldSendCommand = false;
+            std::string keyName = "";
             
             switch (key) {
                 case 'w':
                 case 'W':
                     deltaY = -1;
                     shouldSendCommand = true;
+                    keyName = "W";
                     break;
                 case 's':
                 case 'S':
                     deltaY = 1;
                     shouldSendCommand = true;
+                    keyName = "S";
                     break;
                 case 'a':
                 case 'A':
                     deltaX = -1;
                     shouldSendCommand = true;
+                    keyName = "A";
                     break;
                 case 'd':
                 case 'D':
                     deltaX = 1;
                     shouldSendCommand = true;
+                    keyName = "D";
                     break;
                 case 27: // ESC key
                 case 'q':
@@ -662,60 +683,129 @@ bool LPXDebugClient::processEvents() {
                     return false;
             }
             
-            // Send movement command if any movement was detected and throttling allows
+            std::cout << "[DEBUG CLIENT] Key pressed: '" << keyName << "' (code=" << key 
+                      << "), Total keys: " << totalKeysProcessed << std::endl;
+            
+            // Queue movement command if any movement was detected and throttling allows
             if (shouldSendCommand && (deltaX != 0 || deltaY != 0)) {
                 auto now = std::chrono::steady_clock::now();
                 auto timeSinceLastKey = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyTime).count();
                 
                 if (timeSinceLastKey >= KEY_THROTTLE_MS) {
-                    sendMovementCommand(deltaX, deltaY, stepSize);
+                    // Store the command as pending instead of sending immediately
+                    {
+                        std::lock_guard<std::mutex> lock(pendingCommandMutex);
+                        hasPendingCommand = true;
+                        pendingDeltaX = deltaX;
+                        pendingDeltaY = deltaY;
+                        pendingStepSize = stepSize;
+                        std::cout << "[DEBUG CLIENT] Queued movement command: (" 
+                                  << deltaX << ", " << deltaY << ")" << std::endl;
+                    }
+                    
+                    // Try to send if we can (i.e., after receiving a frame)
+                    if (canSendCommand.load()) {
+                        std::lock_guard<std::mutex> lock(pendingCommandMutex);
+                        if (hasPendingCommand) {
+                            std::cout << "[DEBUG CLIENT] Sending queued command immediately" << std::endl;
+                            bool sent = sendMovementCommand(pendingDeltaX, pendingDeltaY, pendingStepSize);
+                            if (sent) {
+                                totalCommandsSent++;
+                                hasPendingCommand = false;
+                                canSendCommand = false;  // Wait for next frame
+                                std::cout << "[DEBUG CLIENT] Command sent successfully. Total sent: " 
+                                          << totalCommandsSent << std::endl;
+                            } else {
+                                std::cout << "[DEBUG CLIENT] Failed to send command!" << std::endl;
+                            }
+                        }
+                    } else {
+                        std::cout << "[DEBUG CLIENT] Command queued, waiting for frame sync" << std::endl;
+                    }
+                    
                     lastKeyTime = now;
+                } else {
+                    throttledCommands++;
+                    std::cout << "[DEBUG CLIENT] Command throttled (time since last: " 
+                              << timeSinceLastKey << "ms < " << KEY_THROTTLE_MS 
+                              << "ms). Total throttled: " << throttledCommands << std::endl;
                 }
             }
-        } else {
-            // No key pressed, break from key processing loop
-            break;
         }
-    }
     
     // Log periodically that we're processing events
     static int counter = 0;
     if (++counter % 100 == 0) {
-        std::cout << "Main thread processing UI events..." << std::endl;
+        std::cout << "[DEBUG CLIENT] Main thread alive - Events processed: " << counter 
+                  << ", Keys: " << totalKeysProcessed 
+                  << ", Commands sent: " << totalCommandsSent 
+                  << ", Throttled: " << throttledCommands << std::endl;
     }
     
     return true;
 }
 
 bool LPXDebugClient::sendMovementCommand(float deltaX, float deltaY, float stepSize) {
-    std::cout << "[DEBUG] LPXDebugClient: Sending movement command (" << deltaX << ", " << deltaY 
+    auto sendStartTime = std::chrono::high_resolution_clock::now();
+    std::cout << "[TIMER CLIENT] sendMovementCommand called at " 
+              << std::chrono::duration_cast<std::chrono::microseconds>(sendStartTime.time_since_epoch()).count() 
+              << "μs" << std::endl;
+    std::cout << "[DEBUG CLIENT] Sending movement command (" << deltaX << ", " << deltaY 
               << ") step=" << stepSize << std::endl;
     
     if (clientSocket < 0 || !running) {
-        std::cerr << "[ERROR] Not connected to server" << std::endl;
+        std::cerr << "[ERROR CLIENT] Not connected to server" << std::endl;
         return false;
+    }
+    
+    // Frame synchronization check - only send if we've received a frame
+    if (!canSendCommand.load()) {
+        std::cout << "[DEBUG CLIENT] Frame sync: Command blocked - waiting for frame" << std::endl;
+        
+        // Store as pending command
+        {
+            std::lock_guard<std::mutex> lock(pendingCommandMutex);
+            hasPendingCommand = true;
+            pendingDeltaX = deltaX;
+            pendingDeltaY = deltaY;
+            pendingStepSize = stepSize;
+        }
+        
+        return false;  // Command queued but not sent
     }
     
     // Check socket is still valid before sending
     int error = 0;
     socklen_t len = sizeof(error);
     if (getsockopt(clientSocket, SOL_SOCKET, SO_ERROR, &error, &len) != 0 || error != 0) {
-        std::cerr << "[ERROR] Socket error detected: " << strerror(error) << std::endl;
+        std::cerr << "[ERROR CLIENT] Socket error detected: " << strerror(error) << std::endl;
         running = false;
         return false;
     }
     
     // Send command type with error checking
     uint32_t cmdType = 0x02; // CMD_MOVEMENT
+    std::cout << "[DEBUG CLIENT] About to send command type 0x" << std::hex << cmdType << std::dec 
+              << " (" << sizeof(cmdType) << " bytes) on socket " << clientSocket << std::endl;
+    
+    // Check send buffer space before sending
+    int sendSpace = 0;
+    socklen_t optlen = sizeof(sendSpace);
+    if (getsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sendSpace, &optlen) == 0) {
+        std::cout << "[DEBUG CLIENT] Socket send buffer size: " << sendSpace << " bytes" << std::endl;
+    }
+    
     ssize_t sent = send(clientSocket, &cmdType, sizeof(cmdType), MSG_NOSIGNAL);
     if (sent != sizeof(cmdType)) {
-        std::cerr << "[ERROR] Failed to send movement command type: sent " << sent 
-                  << " bytes, expected " << sizeof(cmdType) << ", errno: " << strerror(errno) << std::endl;
+        std::cerr << "[ERROR CLIENT] Failed to send movement command type: sent " << sent 
+                  << " bytes, expected " << sizeof(cmdType) << ", errno: " << errno 
+                  << " (" << strerror(errno) << ")" << std::endl;
         if (errno == EPIPE || errno == ECONNRESET) {
             running = false;
         }
         return false;
     }
+    std::cout << "[DEBUG CLIENT] Command type sent successfully" << std::endl;
     
     // Send movement data with error checking
     struct {
@@ -724,17 +814,29 @@ bool LPXDebugClient::sendMovementCommand(float deltaX, float deltaY, float stepS
         float stepSize;
     } cmd = {deltaX, deltaY, stepSize};
     
+    std::cout << "[DEBUG CLIENT] About to send movement data: deltaX=" << cmd.deltaX 
+              << ", deltaY=" << cmd.deltaY << ", stepSize=" << cmd.stepSize 
+              << " (" << sizeof(cmd) << " bytes)" << std::endl;
+    
     sent = send(clientSocket, &cmd, sizeof(cmd), MSG_NOSIGNAL);
     if (sent != sizeof(cmd)) {
-        std::cerr << "[ERROR] Failed to send movement command data: sent " << sent 
-                  << " bytes, expected " << sizeof(cmd) << ", errno: " << strerror(errno) << std::endl;
+        std::cerr << "[ERROR CLIENT] Failed to send movement command data: sent " << sent 
+                  << " bytes, expected " << sizeof(cmd) << ", errno: " << errno 
+                  << " (" << strerror(errno) << ")" << std::endl;
         if (errno == EPIPE || errno == ECONNRESET) {
             running = false;
         }
         return false;
     }
     
-    // No artificial delay - let socket operations complete naturally
+    std::cout << "[DEBUG CLIENT] Movement command sent successfully" << std::endl;
+    
+    // Clear the flag - we need to wait for next frame before sending another command
+    canSendCommand = false;
+    
+    auto sendEndTime = std::chrono::high_resolution_clock::now();
+    auto sendDuration = std::chrono::duration_cast<std::chrono::microseconds>(sendEndTime - sendStartTime).count();
+    std::cout << "[TIMER CLIENT] Total send operation took " << sendDuration << "µs" << std::endl;
     
     return true;
 }
@@ -807,8 +909,24 @@ void LPXDebugClient::receiverThread() {
             
             std::cout << "Image ready for display" << std::endl;
             
-            // Don't check for key press here - it must be done from main thread
-            // We'll handle this in the main thread instead
+            // Frame received - now we can send the next movement command
+            canSendCommand = true;
+            
+            // Check if we have a pending command to send
+            {
+                std::lock_guard<std::mutex> lock(pendingCommandMutex);
+                if (hasPendingCommand) {
+                    std::cout << "[DEBUG CLIENT] Frame received, sending pending command" << std::endl;
+                    bool sent = sendMovementCommand(pendingDeltaX, pendingDeltaY, pendingStepSize);
+                    if (sent) {
+                        hasPendingCommand = false;
+                        canSendCommand = false;  // Wait for next frame
+                        std::cout << "[DEBUG CLIENT] Pending command sent after frame" << std::endl;
+                    } else {
+                        std::cout << "[DEBUG CLIENT] Failed to send pending command" << std::endl;
+                    }
+                }
+            }
         }
     }
     
