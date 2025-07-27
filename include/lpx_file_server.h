@@ -18,14 +18,7 @@
 
 namespace lpx {
 
-// Movement command for file server
-struct MovementCommand {
-    float deltaX;
-    float deltaY;
-    float stepSize;
-};
-
-// Extended protocol for file server with movement support
+// Extended protocol for file server with movement support (reusing MovementCommand from webcam server)
 class FileLPXProtocol {
 public:
     enum CommandType : uint32_t {
