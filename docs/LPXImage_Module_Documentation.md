@@ -40,7 +40,7 @@ rendered = renderer.renderToImage(lpx_image, 640, 480, 1.0)
 ## Functions
 
 ### `initLPX(scanTableFile: str, width: int = 640, height: int = 480) -> bool`
-Initializes the LPX system with specified scan tables.
+Initializes the LPX system with specified LPXImage scan tables.
 - **Parameters**:
   - `scanTableFile`: Path to the scan tables file.
   - `width`: Width for initialization (default 640).
@@ -48,11 +48,11 @@ Initializes the LPX system with specified scan tables.
 - **Returns**: `True` if initialization succeeded, otherwise `False`.
 
 ### `scanImage(image: np.ndarray, centerX: float, centerY: float) -> LPXImage`
-Scans an image to create an LPXImage using multithreaded processing.
+Scans a standard image to create an LPXImage using multithreaded processing.
 - **Parameters**:
-  - `image`: Image to scan (numpy array).
-  - `centerX`: X-coordinate for the center of processing.
-  - `centerY`: Y-coordinate for the center of processing.
+  - `image`: Standard image to scan (numpy array).
+  - `centerX`: center-relative X offset (in pixels on the standard image) of the scan location.
+  - `centerY`: center-relative Y offset (in pixels on the standard image) of the scan location.
 - **Returns**: An instance of `LPXImage`.
 
 ### `getVersionString() -> str`
@@ -81,27 +81,27 @@ Prints the build information to the console.
 ### `LPXImage`
 Represents a log-polar transformed image.
 - **Methods**:
-  - `getWidth() -> int`: Returns the image width.
-  - `getHeight() -> int`: Returns the image height.
-  - `getLength() -> int`: Returns the image length.
-  - `getMaxCells() -> int`: Returns the maximum number of cells.
-  - `getSpiralPeriod() -> int`: Returns the spiral period.
-  - `getXOffset() -> int`: Returns the X offset.
-  - `getYOffset() -> int`: Returns the Y offset.
-  - `setPosition(x: int, y: int) -> None`: Sets the image position.
+  - `getWidth() -> int`: Returns the image width in standard image pixels.
+  - `getHeight() -> int`: Returns the image height in standard image pixels.
+  - `getLength() -> int`: Returns the image length in LPXImage cells.
+  - `getMaxCells() -> int`: Returns the maximum number of number of LPXImage cells.
+  - `getSpiralPeriod() -> int`: Returns the spiral period in LPXImage cells.
+  - `getXOffset() -> int`: Returns the center-relative X offset of the scan location on the standard image.
+  - `getYOffset() -> int`: Returns the center-relative Y offset of the scan location on the standard image.
+  - `setPosition(x: int, y: int) -> None`: Sets the center-relative scan location on the standard image.
   - `saveToFile(filePath: str) -> bool`: Saves to file.
   - `loadFromFile(filePath: str) -> bool`: Loads from file.
 
 ### `LPXRenderer`
 Handles the rendering of LPXImages back to standard images.
 - **Methods**:
-  - `setScanTables(tables: LPXTables) -> None`: Sets the scan tables.
-  - `renderToImage(image: LPXImage, targetWidth: int, targetHeight: int, scale: float) -> np.ndarray`: Renders to an image.
+  - `setScanTables(tables: LPXTables) -> None`: Sets the scan tables object by name.
+  - `renderToImage(image: LPXImage, targetWidth: int, targetHeight: int, scale: float) -> np.ndarray`: Renders to a standard image.
 
 ### `LPXTables`
-Represents the scan tables used in transformations.
+Represents the LPXImage scan tables object used in transformations.
 - **Attributes**:
-  - `spiralPer`: Spiral period.
+  - `spiralPer`: Spiral period in number of LPXImage cells.
   - `length`: Length of tables.
 - **Methods**:
   - `isInitialized() -> bool`: Checks if tables are initialized.
@@ -111,30 +111,30 @@ File-based LPX server.
 - **Methods**:
   - `start(videoFile: str, width: int = 1920, height: int = 1080) -> bool`: Starts the server.
   - `stop() -> None`: Stops the server.
-  - `setFPS(fps: int) -> None`: Sets the FPS.
-  - `getFPS() -> int`: Gets the FPS.
-  - `setLooping(loop: bool) -> None`: Sets looping.
-  - `isLooping() -> bool`: Checks if looping.
-  - `setCenterOffset(x: float, y: float) -> None`: Sets center offset.
-  - `getClientCount() -> int`: Gets client count.
+  - `setFPS(fps: int) -> None`: Sets the video frames per second.
+  - `getFPS() -> int`: Gets the video frames per second.
+  - `setLooping(loop: bool) -> None`: Sets video looping.
+  - `isLooping() -> bool`: Checks if looping is active.
+  - `setCenterOffset(x: float, y: float) -> None`: Sets initial center-relative x, y offsets of the LPXImage scan on the standard image.
+  - `getClientCount() -> int`: Gets count of active clients.
 
 ### `WebcamLPXServer`
 Webcam-based LPX server.
 - **Methods**:
   - `start(cameraId: int = 0, width: int = 640, height: int = 480) -> bool`: Starts the server.
   - `stop() -> None`: Stops the server.
-  - `setSkipRate(skip: int, minRate: int, maxRate: float) -> None`: Sets skip rate.
+  - `setSkipRate(skip: int, minRate: int, maxRate: float) -> None`: Sets video frame skip rate.
   - `getClientCount() -> int`: Gets client count.
 
 ### `LPXDebugClient`
-Debug client for LPX servers.
+This method renders and displays an LPXImage video stream as a standard video stream.
 - **Methods**:
   - `connect(serverAddress: str) -> bool`: Connects to server.
   - `disconnect() -> None`: Disconnects from server.
-  - `initializeWindow() -> None`: Initializes window.
+  - `initializeWindow() -> None`: Initializes display window.
   - `isRunning() -> bool`: Checks if running.
   - `processEvents() -> bool`: Processes events.
   - `sendMovementCommand(deltaX: float, deltaY: float, stepSize: float = 10.0) -> bool`: Sends movement command.
-  - `setWindowTitle(title: str) -> None`: Sets window title.
-  - `setWindowSize(width: int, height: int) -> None`: Sets window size.
+  - `setWindowTitle(title: str) -> None`: Sets display window title.
+  - `setWindowSize(width: int, height: int) -> None`: Sets display window size in pixels.
   - `setScale(scale: float) -> None`: Sets scale.

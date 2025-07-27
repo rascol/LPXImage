@@ -1,12 +1,12 @@
 # Log-Polar Image
-This is a cross-platform implementation of the log-polar image transformation for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
+This is a cross-platform implementation of the log-polar image transformation ([LogPolarImages.md](./LogPolarImages.md)) for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
 
 ## Features
 
 - Convert streaming video to log-polar format in real-time
 - Stream processed images over network connections
 - Convert log-polar images back to standard format for visualization
-- High-performance multithreaded C++ core with Python bindings
+- High-performance multithreaded C++ core
 - Cross-platform support (macOS, Linux, Windows)
 
 ## Requirements
@@ -18,55 +18,24 @@ This is a cross-platform implementation of the log-polar image transformation fo
 
 ## Installation
 
-### C++ Library
+### Quick Start (Recommended)
 
-The steps below create the Python import library "lpximage" that provides the Log-Polar image conversion properties. This library is unique to each computer and operating system.
+Install the `lpximage` Python module directly from GitHub. This automatically downloads the source, compiles the C++ library, and installs the module:
 
-#### macOS/Linux
+**Linux (Ubuntu 22.04+):**
 ```bash
-# Create build directory
-mkdir -p build
-cd build
-
-# Build the C++ library
-cmake ..
-make
-```
-
-#### Windows
-```batch
-# Create build directory
-mkdir build
-cd build
-
-# Build the C++ library
-cmake .. -G "Visual Studio 17 2022" -A x64
-cmake --build . --config Release
-```
-
-### Python Bindings
-
-#### Option 1: Download, Compile, and Install Python Module (Recommended for Users)
-
-This method downloads the source code from GitHub, compiles it, and installs only the `lpximage` Python module. No local repository copy is created.
-
-**For Linux (Ubuntu 22.04+ and newer distributions):**
-```bash
-# Create a virtual environment (required for newer Ubuntu versions)
-python3 -m venv lpximage-env
-source lpximage-env/bin/activate
-
-# Install system dependencies first
+# Install system dependencies
 sudo apt update
 sudo apt install cmake libopencv-dev python3-dev build-essential
 
-# Download source, compile and install the lpximage Python module
+# Create virtual environment and install
+python3 -m venv lpximage-env
+source lpximage-env/bin/activate
 pip install git+https://github.com/rascol/LPXImage.git
 ```
 
-**For macOS and Windows:**
+**macOS and Windows:**
 ```bash
-# Download source, compile and install the lpximage Python module
 pip install git+https://github.com/rascol/LPXImage.git
 ```
 
@@ -76,9 +45,9 @@ import lpximage
 server = lpximage.WebcamLPXServer("ScanTables63")
 ```
 
-#### Option 2: Clone Repository for Development
+### Development Installation
 
-This method creates a local copy of the repository for development and modification:
+For developers who want to modify the code:
 
 ```bash
 # Clone the repository
@@ -88,29 +57,11 @@ cd LPXImage
 # Install system dependencies (Linux only)
 sudo apt install cmake libopencv-dev python3-dev build-essential
 
-# Create virtual environment
+# Create virtual environment and install in development mode
 python3 -m venv lpximage-env
 source lpximage-env/bin/activate
-
-# Install from local directory
-pip install .
+pip install -e .
 ```
-
-#### Manual Build and Install
-
-```bash
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Configure with Python bindings enabled
-cmake .. -DBUILD_PYTHON_BINDINGS=ON
-
-# Build and install
-make
-sudo make install  # May require sudo depending on your Python installation
-```
-
-For detailed Python installation instructions, see [INSTALL_PYTHON.md](INSTALL_PYTHON.md).
 
 ## Cross-Computer Streaming
 
@@ -230,7 +181,7 @@ def run_client():
     client.initializeWindow()
     
     # Connect to the server
-    if not client.connect("localhost"):
+    if not client.connect("127.0.0.1"):
         print("Failed to connect to server")
         return
     

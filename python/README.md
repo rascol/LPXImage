@@ -24,8 +24,7 @@ if not tables.isInitialized():
     
 # Access properties
 print(f"Spiral period: {tables.spiralPer}")
-print(f"Cells per ring: {tables.cellsPerRing}")
-print(f"Rings count: {tables.ringsCount}")
+print(f"Length: {tables.length}")
 ```
 
 ### LPXImage
@@ -48,6 +47,9 @@ The `LPXRenderer` class renders LPXImage objects back to standard images.
 
 ```python
 import lpximage
+
+# Initialize scan tables first
+tables = lpximage.LPXTables("path/to/ScanTables63")
 
 # Initialize renderer
 renderer = lpximage.LPXRenderer()
@@ -101,7 +103,7 @@ client.setScale(1.0)
 client.initializeWindow()
 
 # Connect to a server
-if not client.connect("localhost"):
+if not client.connect("127.0.0.1"):
     print("Failed to connect to server")
     
 # Process events in a loop
@@ -209,7 +211,7 @@ Most methods in the API return boolean values to indicate success or failure. Al
 import lpximage
 
 # Example of proper error handling
-if not client.connect("localhost"):
+if not client.connect("127.0.0.1"):
     print("Failed to connect to server")
     # Handle the error appropriately
     return
