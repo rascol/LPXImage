@@ -19,9 +19,21 @@
 
 namespace lpx {
 
+// Movement command structure
+struct MovementCommand {
+    float deltaX;
+    float deltaY;
+    float stepSize;
+};
+
 // Simple network protocol for LPXImage streaming
 class LPXStreamProtocol {
 public:
+    enum CommandType : uint32_t {
+        CMD_LPX_IMAGE = 0x01,
+        CMD_MOVEMENT = 0x02
+    };
+    
     // Send a frame index over a socket
     static bool sendFrameIndex(int socket, int frameIndex);
     // Send an LPXImage over a socket
@@ -31,6 +43,9 @@ public:
     static int receiveFrameIndex(int socket);
     // Receive an LPXImage from a socket
     static std::shared_ptr<LPXImage> receiveLPXImage(int socket, std::shared_ptr<LPXTables> scanTables);
+    
+    // Receive a command (returns command type)
+    static uint32_t receiveCommand(int socket, void* data, size_t maxSize);
 };
 
 class WebcamLPXServer {
@@ -44,6 +59,9 @@ public:
     // Adaptive frame skip settings
     void setSkipRate(int min, int max, float motionThreshold = 5.0f);
     int getClientCount();
+    
+    // Movement command handling
+    void handleMovementCommand(const MovementCommand& cmd);
     
 private:
     // Thread functions
@@ -96,6 +114,10 @@ private:
     int captureWidth = 640;
     int captureHeight = 480;
     int frameCount = 0;
+    
+    // Center offset for log-polar transform
+    float centerXOffset = 0.0f;
+    float centerYOffset = 0.0f;
 };
 
 class LPXDebugClient {

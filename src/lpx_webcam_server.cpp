@@ -119,6 +119,46 @@ std::shared_ptr<LPXImage> LPXStreamProtocol::receiveLPXImage(int socket, std::sh
     return image;
 }
 
+uint32_t LPXStreamProtocol::receiveCommand(int socket, void* data, size_t maxSize) {
+    // Command reception with proper error handling to prevent socket desynchronization
+    
+    uint32_t cmdType;
+    ssize_t received = recv(socket, &cmdType, sizeof(cmdType), MSG_DONTWAIT);
+    
+    if (received == sizeof(cmdType)) {
+        // Successfully received command type
+        if (cmdType == CMD_MOVEMENT) {
+            // Receive movement command data
+            MovementCommand cmd;
+            received = recv(socket, &cmd, sizeof(cmd), MSG_DONTWAIT);
+            if (received == sizeof(cmd)) {
+                // Copy command data to output buffer if provided
+                if (data && maxSize >= sizeof(cmd)) {
+                    memcpy(data, &cmd, sizeof(cmd));
+                }
+                return cmdType;
+            } else {
+                std::cerr << "[ERROR] Failed to receive complete movement command data" << std::endl;
+                return 0;
+            }
+        } else {
+            std::cerr << "[ERROR] Unknown command type: 0x" << std::hex << cmdType << std::dec << std::endl;
+            return 0;
+        }
+    } else if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        // No data available (non-blocking), this is normal
+        return 0;
+    } else {
+        // Error or partial read
+        if (received == 0) {
+            std::cout << "[DEBUG] Client disconnected during command reception" << std::endl;
+        } else {
+            std::cerr << "[ERROR] Failed to receive command type: " << strerror(errno) << std::endl;
+        }
+        return 0;
+    }
+}
+
 // WebcamLPXServer implementation
 WebcamLPXServer::WebcamLPXServer(const std::string& scanTableFile, int port) 
     : port(port), serverSocket(-1), running(false), currentSkipRate(3) {
@@ -237,6 +277,44 @@ int WebcamLPXServer::getClientCount() {
     return clientSockets.size();
 }
 
+void WebcamLPXServer::handleMovementCommand(const MovementCommand& cmd) {
+    auto cmdStartTime = std::chrono::high_resolution_clock::now();
+    std::cout << "[TIMER] Server received movement command at " << std::chrono::duration_cast<std::chrono::microseconds>(cmdStartTime.time_since_epoch()).count() << "μs" << std::endl;
+    std::cout << "[DEBUG] Handling movement command: (" << cmd.deltaX << ", " << cmd.deltaY 
+              << ") step=" << cmd.stepSize << std::endl;
+    
+    // Apply movement with step size
+    centerXOffset += cmd.deltaX * cmd.stepSize;
+    centerYOffset += cmd.deltaY * cmd.stepSize;
+    
+    // Apply bounds checking to prevent crashes
+    // Keep center within reasonable bounds relative to scan map size (not capture size)
+    // The scan table mapWidth represents the full scanning region
+    if (scanTables && scanTables->mapWidth > 0) {
+        // Reduce bounds to be more conservative - 20% instead of 40%
+        float maxOffsetX = scanTables->mapWidth * 0.2f;  // Allow center to move up to 20% of scan map width
+        float maxOffsetY = scanTables->mapWidth * 0.2f;  // Assume square scan map for height
+        
+        std::cout << "[DEBUG] Scan table mapWidth: " << scanTables->mapWidth 
+                  << ", max offset bounds: ±" << maxOffsetX << std::endl;
+        
+        centerXOffset = std::max(-maxOffsetX, std::min(maxOffsetX, centerXOffset));
+        centerYOffset = std::max(-maxOffsetY, std::min(maxOffsetY, centerYOffset));
+    } else {
+        // Fallback to capture dimensions if scan tables not available
+        float maxOffsetX = captureWidth * 0.4f;
+        float maxOffsetY = captureHeight * 0.4f;
+        
+        centerXOffset = std::max(-maxOffsetX, std::min(maxOffsetX, centerXOffset));
+        centerYOffset = std::max(-maxOffsetY, std::min(maxOffsetY, centerYOffset));
+    }
+    
+    auto cmdEndTime = std::chrono::high_resolution_clock::now();
+    auto cmdDuration = std::chrono::duration_cast<std::chrono::microseconds>(cmdEndTime - cmdStartTime).count();
+    std::cout << "[TIMER] Server processed movement command in " << cmdDuration << "μs" << std::endl;
+    std::cout << "[DEBUG] New center offset (bounded): (" << centerXOffset << ", " << centerYOffset << ")" << std::endl;
+}
+
 void WebcamLPXServer::captureThread(int cameraId) {
     cv::VideoCapture cap(cameraId);
     
@@ -320,9 +398,9 @@ void WebcamLPXServer::processingThread() {
         // Process the frame
         auto startTime = std::chrono::high_resolution_clock::now();
         
-        // Center the LPX scan at the center of the image
-        float centerX = frameToProcess.cols / 2.0f;
-        float centerY = frameToProcess.rows / 2.0f;
+        // Center the LPX scan at the center of the image with offsets
+        float centerX = frameToProcess.cols / 2.0f + centerXOffset;
+        float centerY = frameToProcess.rows / 2.0f + centerYOffset;
         
         // Use the existing multithreaded scanning function
         auto lpxImage = multithreadedScanImage(frameToProcess, centerX, centerY);
@@ -376,6 +454,13 @@ void WebcamLPXServer::networkThread() {
             std::vector<int> disconnectedClients;
             
             for (int clientSocket : clientSockets) {
+                MovementCommand cmd;
+                uint32_t cmdType = LPXStreamProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
+                if (cmdType == LPXStreamProtocol::CMD_MOVEMENT) {
+                    std::cout << "[DEBUG] Received movement command from client " << clientSocket << std::endl;
+                    handleMovementCommand(cmd);
+                }
+
                 if (!LPXStreamProtocol::sendLPXImage(clientSocket, imageToSend)) {
                     disconnectedClients.push_back(clientSocket);
                 }
@@ -408,6 +493,10 @@ void WebcamLPXServer::acceptClients() {
             std::cout << "New client connected from " 
                      << inet_ntoa(clientAddr.sin_addr) << ":" 
                      << ntohs(clientAddr.sin_port) << std::endl;
+            
+            // Set client socket to non-blocking for command polling
+            int flags = fcntl(clientSocket, F_GETFL, 0);
+            fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK);
             
             // Add to clients set
             std::lock_guard<std::mutex> lock(clientsMutex);
