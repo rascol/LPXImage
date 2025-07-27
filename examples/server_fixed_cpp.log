@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/ray/Desktop/LPXImage/examples/lpx_file_server.py", line 13, in <module>
-    import lpximage
-ImportError: dlopen(/Users/ray/Library/Python/3.12/lib/python/site-packages/lpximage.so, 0x0002): Library not loaded: @rpath/liblpx_image.1.dylib
-  Referenced from: <063C1785-78C7-39C9-9660-B8F97F810A13> /Users/ray/Library/Python/3.12/lib/python/site-packages/lpximage.so
-  Reason: tried: '/Users/ray/Library/Python/3.12/lib/python/site-packages/liblpx_image.1.dylib' (no such file), '/Users/ray/Library/Python/3.12/lib/python/site-packages/../lib/liblpx_image.1.dylib' (no such file), '/Users/ray/Library/Python/3.12/lib/python/site-packages/../../lib/liblpx_image.1.dylib' (no such file), '/Users/ray/Library/Python/3.12/lib/python/site-packages/liblpx_image.1.dylib' (no such file), '/Users/ray/Library/Python/3.12/lib/python/site-packages/../lib/liblpx_image.1.dylib' (no such file), '/Users/ray/Library/Python/3.12/lib/python/site-packages/../../lib/liblpx_image.1.dylib' (no such file)

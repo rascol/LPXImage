@@ -1,8 +1,0 @@
-objc[19154]: Class CaptureDelegate is implemented in both /Users/ray/Library/Python/3.12/lib/python/site-packages/cv2/cv2.abi3.so (0x109aee518) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_videoio.4.11.0.dylib (0x10ca80848). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-objc[19154]: Class CVWindow is implemented in both /Users/ray/Library/Python/3.12/lib/python/site-packages/cv2/cv2.abi3.so (0x109aee568) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x10bf74b28). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-objc[19154]: Class CVView is implemented in both /Users/ray/Library/Python/3.12/lib/python/site-packages/cv2/cv2.abi3.so (0x109aee590) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x10bf74b50). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-objc[19154]: Class CVSlider is implemented in both /Users/ray/Library/Python/3.12/lib/python/site-packages/cv2/cv2.abi3.so (0x109aee5b8) and /opt/homebrew/Cellar/opencv/4.11.0_1/lib/libopencv_highgui.4.11.0.dylib (0x10bf74b78). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-Traceback (most recent call last):
-  File "/Users/ray/Desktop/LPXImage/examples/lpx_renderer.py", line 7, in <module>
-    import lpximage
-ImportError: Python version mismatch: module was compiled for Python 3.11, but the interpreter version is incompatible: 3.12.3 (v3.12.3:f6650f9ad7, Apr  9 2024, 08:18:47) [Clang 13.0.0 (clang-1300.0.29.30)].

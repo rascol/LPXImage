@@ -74,9 +74,6 @@ target_include_directories(lpx_image PUBLIC
 # Link with PUBLIC visibility so executables using the library can also see OpenCV
 target_link_libraries(lpx_image PUBLIC ${OpenCV_LIBS})
 
-# Add multithreaded test executable
-add_executable(test_mt_lpx src/test_mt_lpx.cpp)
-target_link_libraries(test_mt_lpx PRIVATE lpx_image ${OpenCV_LIBS})
 
 # Add the webcam server executable
 add_executable(main_webcam_server 
@@ -101,9 +98,6 @@ target_link_libraries(main_debug_renderer
     pthread
 )
 
-# Add OpenCV test executable
-add_executable(test_opencv src/test_opencv.cpp)
-target_link_libraries(test_opencv ${OpenCV_LIBS})
 
 # Option to build Python bindings
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
