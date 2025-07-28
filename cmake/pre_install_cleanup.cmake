@@ -5,16 +5,19 @@ message(STATUS "=== PRE-INSTALL CLEANUP ===")
 message(STATUS "Forcefully removing old LPX libraries before installing new ones...")
 
 # Define common library locations
-set(HOMEBREW_SITE_PACKAGES "/opt/homebrew/lib/python3.13/site-packages")
 set(USR_LOCAL_LIB "/usr/local/lib")
 set(USR_LOCAL_INCLUDE "/usr/local/include")
+set(HOMEBREW_LIB "/opt/homebrew/lib")
 
-# List of files to remove
-set(OLD_LIBRARIES
-    "${HOMEBREW_SITE_PACKAGES}/lpximage.cpython-313-darwin.so"
-    "${HOMEBREW_SITE_PACKAGES}/liblpx_image.1.0.0.dylib"
-    "${HOMEBREW_SITE_PACKAGES}/liblpx_image.1.dylib" 
-    "${HOMEBREW_SITE_PACKAGES}/liblpx_image.dylib"
+# Find all Python site-packages directories
+file(GLOB PYTHON_SITE_PACKAGES_DIRS "/opt/homebrew/lib/python*/site-packages")
+file(GLOB USER_PYTHON_SITE_PACKAGES_DIRS "/Users/ray/Library/Python/*/lib/python/site-packages")
+
+# Initialize list of files to remove
+set(OLD_LIBRARIES)
+
+# Add system-wide C++ libraries
+list(APPEND OLD_LIBRARIES
     "${USR_LOCAL_LIB}/liblpx_image.1.0.0.dylib"
     "${USR_LOCAL_LIB}/liblpx_image.1.dylib"
     "${USR_LOCAL_LIB}/liblpx_image.dylib"
@@ -22,7 +25,45 @@ set(OLD_LIBRARIES
     "${USR_LOCAL_INCLUDE}/lpx_renderer.h"
     "${USR_LOCAL_INCLUDE}/lpx_mt.h"
     "${USR_LOCAL_INCLUDE}/lpx_webcam_server.h"
+    "${USR_LOCAL_INCLUDE}/lpx_file_server.h"
+    "${HOMEBREW_LIB}/liblpx_image.1.0.0.dylib"
+    "${HOMEBREW_LIB}/liblpx_image.1.dylib"
+    "${HOMEBREW_LIB}/liblpx_image.dylib"
 )
+
+# Add Python libraries from ALL Python versions (3.11, 3.12, 3.13, etc.)
+foreach(python_dir ${PYTHON_SITE_PACKAGES_DIRS})
+    if(EXISTS "${python_dir}")
+        # Standard library files
+        file(GLOB python_libs "${python_dir}/lpximage.cpython-*.so")
+        list(APPEND OLD_LIBRARIES ${python_libs})
+        
+        list(APPEND OLD_LIBRARIES
+            "${python_dir}/liblpx_image.1.0.0.dylib"
+            "${python_dir}/liblpx_image.1.dylib"
+            "${python_dir}/liblpx_image.dylib"
+        )
+        
+        # Editable install artifacts (from development installs)
+        file(GLOB editable_pth "${python_dir}/__editable__.lpximage-*.pth")
+        file(GLOB editable_finder "${python_dir}/__editable___lpximage_*_finder.py")
+        file(GLOB dist_info "${python_dir}/lpximage-*.dist-info")
+        file(GLOB pycache_editable "${python_dir}/__pycache__/__editable___lpximage_*")
+        
+        list(APPEND OLD_LIBRARIES ${editable_pth} ${editable_finder} ${dist_info} ${pycache_editable})
+    endif()
+endforeach()
+
+# Add user-specific Python libraries
+foreach(user_python_dir ${USER_PYTHON_SITE_PACKAGES_DIRS})
+    if(EXISTS "${user_python_dir}")
+        file(GLOB user_python_libs "${user_python_dir}/lpximage.cpython-*.so")
+        file(GLOB user_lib_files "${user_python_dir}/liblpx_image.*")
+        file(GLOB user_dist_info "${user_python_dir}/lpximage-*.dist-info")
+        
+        list(APPEND OLD_LIBRARIES ${user_python_libs} ${user_lib_files} ${user_dist_info})
+    endif()
+endforeach()
 
 # Also remove any files in the project root that might be old (but NOT build directory)
 set(ROOT_OLD_FILES
@@ -61,8 +102,13 @@ endforeach()
 
 # Verify removal - check that critical files are gone
 message(STATUS "=== VERIFICATION ===")
+
+# Check current Python version's site-packages
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+get_filename_component(PYTHON_SITE_PACKAGES "${Python3_SITELIB}" ABSOLUTE)
+
 set(CRITICAL_FILES
-    "${HOMEBREW_SITE_PACKAGES}/lpximage.cpython-313-darwin.so"
+    "${PYTHON_SITE_PACKAGES}/lpximage.cpython-313-darwin.so"
     "${USR_LOCAL_LIB}/liblpx_image.1.0.0.dylib"
 )
 

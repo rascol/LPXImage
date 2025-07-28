@@ -277,6 +277,12 @@ int WebcamLPXServer::getClientCount() {
     return clientSockets.size();
 }
 
+void WebcamLPXServer::setCenterOffset(float x, float y) {
+    centerXOffset = x;
+    centerYOffset = y;
+    std::cout << "[DEBUG] WebcamLPXServer: Center offset set to (" << x << ", " << y << ")" << std::endl;
+}
+
 void WebcamLPXServer::handleMovementCommand(const MovementCommand& cmd) {
     auto cmdStartTime = std::chrono::high_resolution_clock::now();
     std::cout << "[TIMER] Server received movement command at " << std::chrono::duration_cast<std::chrono::microseconds>(cmdStartTime.time_since_epoch()).count() << "μs" << std::endl;

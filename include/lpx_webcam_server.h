@@ -60,6 +60,9 @@ public:
     void setSkipRate(int min, int max, float motionThreshold = 5.0f);
     int getClientCount();
     
+    // Center offset control
+    void setCenterOffset(float x, float y);
+    
     // Movement command handling
     void handleMovementCommand(const MovementCommand& cmd);
     

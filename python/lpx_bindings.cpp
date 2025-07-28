@@ -126,6 +126,9 @@ PYBIND11_MODULE(lpximage, m) {
              py::arg("cameraId") = 0, py::arg("width") = 640, py::arg("height") = 480)
         .def("stop", &lpx::WebcamLPXServer::stop)
         .def("setSkipRate", &lpx::WebcamLPXServer::setSkipRate)
+        .def("setCenterOffset", [](lpx::WebcamLPXServer& self, float x, float y) {
+            self.setCenterOffset(x, y);
+        }, py::arg("x"), py::arg("y"))
         .def("getClientCount", &lpx::WebcamLPXServer::getClientCount);
 
     // Bind file server functionality

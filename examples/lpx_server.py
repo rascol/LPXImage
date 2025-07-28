@@ -8,6 +8,9 @@ import signal
 import sys
 import os
 import argparse
+import select
+import termios
+import tty
 
 try:
     import lpximage
@@ -17,8 +20,10 @@ except ModuleNotFoundError:
     print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
     sys.exit(1)
 
-# Global variable for server
+# Global variables
 server = None
+current_x_offset = 0.0
+current_y_offset = 0.0
 
 # Define signal handler
 def signal_handler(sig, frame):
@@ -64,8 +69,8 @@ def main():
     # Create and start the LPX server
     global server
     try:
-        # Initialize the server with scan tables
-        server = lpximage.WebcamLPXServer(args.tables)
+        # Initialize the server with scan tables and port
+        server = lpximage.WebcamLPXServer(args.tables, args.port)
         
         # Start the server with the specified camera and resolution
         if not server.start(args.camera, args.width, args.height):
@@ -74,6 +79,19 @@ def main():
         
         print(f"Server started and listening on port {args.port}")
         print("Waiting for clients to connect...")
+        print("\n=== WASD Movement Controls ===")
+        print("Use WASD keys to control the log-polar transform center:")
+        print("  W - Move up")
+        print("  A - Move left")
+        print("  S - Move down")
+        print("  D - Move right")
+        print("  R - Reset to center")
+        print("  Q - Quit movement control")
+        print("===========================\n")
+        
+        # Start WASD movement thread
+        movement_thread = threading.Thread(target=handle_wasd_movement, daemon=True)
+        movement_thread.start()
         
         # Main server loop
         while True:
@@ -94,6 +112,47 @@ def main():
         if server is not None:
             server.stop()
             print("Server stopped")
+
+def handle_wasd_movement():
+    """Handle WASD movement commands from the keyboard input."""
+    global current_x_offset, current_y_offset
+    
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    tty.setcbreak(fd)
+
+    move_map = {
+        'w': (0, -10), # Up
+        'a': (-10, 0), # Left
+        's': (0, 10),  # Down
+        'd': (10, 0),  # Right
+    }
+
+    try:
+        while True:
+            if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+                key = sys.stdin.read(1)
+                if key in move_map:
+                    dx, dy = move_map[key]
+                    # Apply relative movement
+                    current_x_offset += dx
+                    current_y_offset += dy
+                    # Set the absolute position
+                    server.setCenterOffset(current_x_offset, current_y_offset)
+                    print(f"Center offset: ({current_x_offset:.1f}, {current_y_offset:.1f})")
+                elif key == 'q':
+                    print("Quitting WASD movement control")
+                    break
+                elif key == 'r':
+                    # Reset to center
+                    current_x_offset = 0.0
+                    current_y_offset = 0.0
+                    server.setCenterOffset(current_x_offset, current_y_offset)
+                    print("Reset to center (0, 0)")
+            time.sleep(0.05)  # Faster response for movement
+
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 if __name__ == "__main__":
     main()
