@@ -57,6 +57,9 @@ cd LPXImage
 # Install system dependencies (Linux only)
 sudo apt install cmake libopencv-dev python3-dev build-essential
 
+# Install system dependencies (Mac only)
+brew install cmake opencv python@3.13
+
 # Create virtual environment and install in development mode
 python3 -m venv lpximage-env
 source lpximage-env/bin/activate
