@@ -124,6 +124,7 @@ Webcam-based LPX server.
   - `start(cameraId: int = 0, width: int = 640, height: int = 480) -> bool`: Starts the server.
   - `stop() -> None`: Stops the server.
   - `setSkipRate(skip: int, minRate: int, maxRate: float) -> None`: Sets video frame skip rate.
+  - `setCenterOffset(x: float, y: float) -> None`: Sets center-relative x, y offsets of the LPXImage scan on the standard image while images are being streamed.
   - `getClientCount() -> int`: Gets client count.
 
 ### `LPXDebugClient`
