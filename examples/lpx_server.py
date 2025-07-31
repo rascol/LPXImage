@@ -11,6 +11,7 @@ import argparse
 import select
 import termios
 import tty
+import socket
 
 try:
     import lpximage
@@ -51,6 +52,7 @@ def main():
     parser.add_argument('--width', type=int, default=1920, help='Video width')
     parser.add_argument('--height', type=int, default=1080, help='Video height')
     parser.add_argument('--port', type=int, default=5050, help='Server port')
+    parser.add_argument('--saccade_port', type=int, default=5051, help='Port for saccade commands')
     parser.add_argument('--x_offset', type=int, default=0, help='X offset from center (positive = right)')
     parser.add_argument('--y_offset', type=int, default=0, help='Y offset from center (positive = down)')
     args = parser.parse_args()
@@ -90,7 +92,7 @@ def main():
         print("===========================\n")
         
         # Start WASD movement thread
-        movement_thread = threading.Thread(target=handle_wasd_movement, daemon=True)
+        movement_thread = threading.Thread(target=handle_wasd_movement, args=(args.saccade_port,), daemon=True)
         movement_thread.start()
         
         # Main server loop
@@ -113,46 +115,75 @@ def main():
             server.stop()
             print("Server stopped")
 
-def handle_wasd_movement():
-    """Handle WASD movement commands from the keyboard input."""
+def handle_wasd_movement(saccade_port=None):
+    """Handle WASD movement commands and saccade network commands."""
     global current_x_offset, current_y_offset
     
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     tty.setcbreak(fd)
 
+    # Setup saccade socket (non-blocking)
+    saccade_sock = None
+    if saccade_port:
+        try:
+            saccade_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            saccade_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            saccade_sock.bind(('127.0.0.1', saccade_port))
+            saccade_sock.listen(1)
+            saccade_sock.setblocking(False)
+            print(f"Saccade commands available on port {saccade_port}")
+        except:
+            saccade_sock = None
+            print(f"Warning: Could not bind saccade port {saccade_port}")
+
     move_map = {
-        'w': (0, -10), # Up
-        'a': (-10, 0), # Left
-        's': (0, 10),  # Down
-        'd': (10, 0),  # Right
+        'w': (0, -10), 'a': (-10, 0), 's': (0, 10), 'd': (10, 0),
     }
 
     try:
         while True:
+            # Existing WASD handling (unchanged)
             if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
                 key = sys.stdin.read(1)
                 if key in move_map:
                     dx, dy = move_map[key]
-                    # Apply relative movement
                     current_x_offset += dx
                     current_y_offset += dy
-                    # Set the absolute position
                     server.setCenterOffset(current_x_offset, current_y_offset)
-                    print(f"Center offset: ({current_x_offset:.1f}, {current_y_offset:.1f})")
+                    print(f"WASD Center: ({current_x_offset:.1f}, {current_y_offset:.1f})")
                 elif key == 'q':
-                    print("Quitting WASD movement control")
                     break
                 elif key == 'r':
-                    # Reset to center
-                    current_x_offset = 0.0
-                    current_y_offset = 0.0
+                    current_x_offset = current_y_offset = 0.0
                     server.setCenterOffset(current_x_offset, current_y_offset)
                     print("Reset to center (0, 0)")
-            time.sleep(0.05)  # Faster response for movement
+
+            # New: Check for saccade commands
+            if saccade_sock:
+                try:
+                    conn, _ = saccade_sock.accept()
+                    conn.setblocking(False)
+                    try:
+                        data = conn.recv(1024).decode().strip()
+                        if data:
+                            x_rel, y_rel = map(float, data.split(','))
+                            current_x_offset += x_rel
+                            current_y_offset += y_rel
+                            server.setCenterOffset(current_x_offset, current_y_offset)
+                            print(f"Saccade: ({x_rel:+.1f}, {y_rel:+.1f}) -> ({current_x_offset:.1f}, {current_y_offset:.1f})")
+                    except:
+                        pass
+                    conn.close()
+                except:
+                    pass
+
+            time.sleep(0.05)
 
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        if saccade_sock:
+            saccade_sock.close()
 
 if __name__ == "__main__":
     main()

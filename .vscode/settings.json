@@ -85,5 +85,18 @@
         "span": "cpp",
         "unordered_set": "cpp",
         "format": "cpp"
-    }
+    },
+    "python.defaultInterpreter": "/Users/ray/Desktop/LPXImage/lpximage-env/bin/python3",
+    "python.pythonPath": "/Users/ray/Desktop/LPXImage/lpximage-env/bin/python3",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.extraPaths": [
+        "/Users/ray/Desktop/LPXImage"
+    ],
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/ray/Desktop/LPXImage/lpximage-env/bin:${env:PATH}",
+        "PYTHONPATH": "/Users/ray/Desktop/LPXImage:${env:PYTHONPATH}"
+    },
+    "terminal.integrated.shellArgs.osx": [
+        "-l"
+    ]
 }

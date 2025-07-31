@@ -25,3 +25,4 @@ Makefile
 # macOS specific
 .DS_Store
 EOF
+.env

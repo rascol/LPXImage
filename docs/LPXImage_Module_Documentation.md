@@ -115,7 +115,7 @@ File-based LPX server.
   - `getFPS() -> int`: Gets the video frames per second.
   - `setLooping(loop: bool) -> None`: Sets video looping.
   - `isLooping() -> bool`: Checks if looping is active.
-  - `setCenterOffset(x: float, y: float) -> None`: Sets initial center-relative x, y offsets of the LPXImage scan on the standard image.
+  - `setCenterOffset(x: float, y: float) -> None`: Sets center-relative x, y offsets of the LPXImage scan on the standard image while images are being streamed.
   - `getClientCount() -> int`: Gets count of active clients.
 
 ### `WebcamLPXServer`
