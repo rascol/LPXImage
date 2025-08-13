@@ -239,6 +239,65 @@ if not server.start(camera_id, width, height):
 
 ## Troubleshooting
 
+### ⚠️ CRITICAL: Python Library Loading Priority Issues
+
+**This is the most common development issue that can waste hours of debugging time!**
+
+When developing locally, Python may load an **old installed version** of the lpximage module from site-packages instead of your local development version, causing your code changes to be completely ignored.
+
+#### Symptoms:
+- Your C++ code changes don't seem to take effect
+- Rebuilding the project doesn't change behavior
+- Print statements or modifications in the C++ code are ignored
+- The module works but uses old functionality
+
+#### Root Cause:
+Python's module search order prioritizes system-installed packages in site-packages over local development files, even when you're working in the project directory.
+
+#### **Solution: Always Set PYTHONPATH for Local Development**
+
+```bash
+# FOR LOCAL DEVELOPMENT - ALWAYS USE THIS:
+export PYTHONPATH=.
+python your_script.py
+
+# Or run in one line:
+PYTHONPATH=. python your_script.py
+```
+
+#### **Verification: Check Which Module is Loading**
+
+Add this to your Python script to verify you're using the local version:
+
+```python
+import lpximage
+print(f"Module location: {lpximage.__file__}")
+# Should show: /path/to/your/project/lpximage/__init__.py
+# NOT: /usr/local/lib/python3.x/site-packages/lpximage/...
+```
+
+#### **For Development Scripts**
+
+Add this to the top of your development scripts:
+
+```python
+import sys
+import os
+# Ensure we use the local development version
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+```
+
+#### **Alternative: Remove System Installation**
+
+If you have lpximage installed system-wide and only want to use local development:
+
+```bash
+# Remove system installation
+pip uninstall lpximage
+# Or if installed via pip3:
+pip3 uninstall lpximage
+```
+
 ### Module Import Issues
 
 If you encounter `ModuleNotFoundError: No module named 'lpximage'`:

@@ -196,6 +196,19 @@ cmake --build . --target uninstall
 
 ## Troubleshooting
 
+### ⚠️ CRITICAL: Python Module Loading Priority (Development)
+
+**If you're developing locally and making C++ code changes that seem to be ignored, you may be loading an old system-installed version instead of your local development version!**
+
+This is the #1 cause of wasted development time. Always use:
+
+```bash
+# For local development - ALWAYS set PYTHONPATH:
+PYTHONPATH=. python your_script.py
+```
+
+See the detailed explanation in [python/README.md](python/README.md#critical-python-library-loading-priority-issues).
+
 ### Library Loading Issues on macOS
 
 If you encounter errors about missing libraries when importing the module, such as:
