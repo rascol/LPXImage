@@ -140,11 +140,27 @@ add_custom_target(uninstall
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_clean.cmake
   COMMENT "Uninstalling files...")
 
-# Installation
-install(TARGETS lpx_image DESTINATION lib)
+# Installation - support both system and local installation
+if(NOT CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    # Custom install prefix was provided (e.g., for Python builds)
+    message(STATUS "Installing to custom prefix: ${CMAKE_INSTALL_PREFIX}")
+else()
+    # Default to local installation in project directory
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation directory" FORCE)
+    message(STATUS "Installing locally to: ${CMAKE_INSTALL_PREFIX}")
+endif()
+
+install(TARGETS lpx_image 
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION lib
+)
+
 install(FILES 
     include/lpx_image.h
     include/lpx_renderer.h
     include/lpx_mt.h
     include/lpx_webcam_server.h
-    DESTINATION include)
+    include/lpx_file_server.h
+    DESTINATION include
+)
