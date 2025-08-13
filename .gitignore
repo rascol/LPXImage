@@ -11,15 +11,16 @@ Makefile
 *.o
 *.obj
 
-# Compiled dynamic libraries (but keep local installation copies)
+# Compiled dynamic libraries
 *.so
 *.dylib
 *.dll
 
-# Local installation files (keep in project root for Python module)
-!liblpx_image.*.dylib
-!liblpx_image.*.so
-!lpximage.cpython-*.so
+# Local installation directories (generated during build/install)
+lib/
+
+# Python module binaries (generated during local installation)
+lpximage.cpython-*.so
 
 # Executables
 *.exe
