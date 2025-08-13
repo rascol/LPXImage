@@ -58,9 +58,21 @@ endif()
 # Install the module to the correct site-packages directory
 install(TARGETS lpximage DESTINATION "${PYTHON_SITE_PACKAGES}")
 
-# Also install the C++ library alongside the Python module
-# This ensures the Python module can find the library it depends on
-install(TARGETS lpx_image DESTINATION "${PYTHON_SITE_PACKAGES}")
+# Only install C++ library to Python site-packages if CMAKE_INSTALL_PREFIX is NOT the project root
+# This distinguishes between pip installs (custom prefix) and local builds (project root)
+get_filename_component(PROJECT_ROOT_ABS "${CMAKE_SOURCE_DIR}" ABSOLUTE)
+get_filename_component(INSTALL_PREFIX_ABS "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+
+if(NOT "${INSTALL_PREFIX_ABS}" STREQUAL "${PROJECT_ROOT_ABS}")
+  message(STATUS "Detected pip/setuptools installation - installing C++ library to Python site-packages")
+  message(STATUS "  Install prefix: ${INSTALL_PREFIX_ABS}")
+  message(STATUS "  Project root: ${PROJECT_ROOT_ABS}")
+  install(TARGETS lpx_image DESTINATION "${PYTHON_SITE_PACKAGES}")
+else()
+  message(STATUS "Local development build detected - C++ library will be installed to lib/ directory only")
+  message(STATUS "  Install prefix: ${INSTALL_PREFIX_ABS}")
+  message(STATUS "  Project root: ${PROJECT_ROOT_ABS}")
+endif()
 
 # Output installation paths for debugging
 message(STATUS "Python module will be installed to: ${PYTHON_SITE_PACKAGES}")
