@@ -50,6 +50,7 @@ add_library(lpx_image SHARED
     src/lpx_globals.cpp
     src/mt_lpx_renderer.cpp
     src/mt_lpx_image.cpp
+    src/optimized_scan.cpp   # Added optimized scanning
     src/lpx_logging.cpp
     src/lpx_webcam_server.cpp
     src/lpx_file_server.cpp  # Added file server implementation

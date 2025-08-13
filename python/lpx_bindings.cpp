@@ -76,7 +76,13 @@ PYBIND11_MODULE(lpximage, m) {
         .def("getYOffset", &lpx::LPXImage::getYOffset)
         .def("setPosition", &lpx::LPXImage::setPosition)
         .def("saveToFile", &lpx::LPXImage::saveToFile)
-        .def("loadFromFile", &lpx::LPXImage::loadFromFile);
+        .def("loadFromFile", &lpx::LPXImage::loadFromFile)
+        .def("getRawData", [](const lpx::LPXImage& self) {
+            const uint8_t* raw_ptr = self.getRawData();
+            size_t data_size = self.getRawDataSize();
+            return py::bytes(reinterpret_cast<const char*>(raw_ptr), data_size);
+        }, "Get raw image data as bytes")
+        .def("getCellValue", &lpx::LPXImage::getCellValue, "Get the value of a specific cell");
 
     // Bind LPXRenderer class
     py::class_<lpx::LPXRenderer, std::shared_ptr<lpx::LPXRenderer>>(m, "LPXRenderer")

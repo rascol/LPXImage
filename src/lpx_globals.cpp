@@ -5,6 +5,7 @@
  */
 
 #include "../include/lpx_image.h"
+#include "../include/lpx_common.h"
 
 namespace lpx {
 
