@@ -1,9 +1,6 @@
 # Log-Polar Image
 
-> **📖 NEW TO LOG-POLAR TRANSFORMATIONS?** 
-> **[START HERE: Read LogPolarImages.md](./LogPolarImages.md)** to understand what this project does and why it's important!
-
-This is a cross-platform implementation of the log-polar image transformation for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
+This is a cross-platform implementation of the log-polar image transformation ([LogPolarImages.md](./LogPolarImages.md)) for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
 
 ## Features
 
