@@ -63,7 +63,8 @@ set_target_properties(lpx_image PROPERTIES
     # CXX_VISIBILITY_PRESET hidden
     # VISIBILITY_INLINES_HIDDEN YES
     SOVERSION 1
-    VERSION 1.0.0
+    # VERSION removed to prevent creating redundant liblpx_image.1.0.0.dylib
+    # Only SOVERSION is needed - creates liblpx_image.1.dylib which is what executables use
 )
 
 target_include_directories(lpx_image PUBLIC
