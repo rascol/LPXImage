@@ -1,5 +1,9 @@
 # Log-Polar Image
-This is a cross-platform implementation of the log-polar image transformation ([LogPolarImages.md](./LogPolarImages.md)) for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
+
+> **📖 NEW TO LOG-POLAR TRANSFORMATIONS?** 
+> **[START HERE: Read LogPolarImages.md](./LogPolarImages.md)** to understand what this project does and why it's important!
+
+This is a cross-platform implementation of the log-polar image transformation for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
 
 ## Features
 
@@ -65,6 +69,24 @@ python3 -m venv lpximage-env
 source lpximage-env/bin/activate
 pip install -e .
 ```
+
+### Local Installation (Self-Contained)
+
+For a completely self-contained installation that doesn't affect your system:
+
+```bash
+# Clone the repository
+git clone https://github.com/rascol/LPXImage.git
+cd LPXImage
+
+# Run the local installation script
+./install_local.sh
+
+# Use with PYTHONPATH
+PYTHONPATH=. python3 your_script.py
+```
+
+This installs all libraries locally in the project directory. See [INSTALL_LOCAL.md](./INSTALL_LOCAL.md) for detailed information.
 
 ## Cross-Computer Streaming
 
