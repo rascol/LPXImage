@@ -233,9 +233,9 @@ The view comparisons could be accumulated to a _performance count_ array of _151
  
 For _self_ views, the raw comparison result (a _1_ or _0_) for each _retinaCell_ identifier is _summed_ to the corresponding int16 element in the _performance count_ array. For _other_ views, the comparison result is _subtracted_ from the corresponding int16 element in the _performance count_ array.
 
-For _self_ views, the count of each _retinaCell_ identifier in the _self_ _performance count_ array is incremented by _1_ only if its comparison value is low and the _performance count_ identifier value is less that 16
+For _self_ views, the count of each _retinaCell_ identifier in the _self_ _performance count_ array is incremented by _1_ only if its comparison value is low and the _performance count_ identifier value is less than 16. A view is incremented by _1_ only if its comparison value is low and the _performance count_ identifier value is less than 16. 
 
-view is incremented by _1_ only if its comparison value is low and the _performance count_ identifier value is less that 16. For _other_ views, the _performance count_ of each _retinaCell_ identifier is incremented by _1_ only if its comparison value is high and the _performance count_ identifier value is less than 16.
+For _other_ views, the _performance count_ of each _retinaCell_ identifier is incremented by _1_ only if its comparison value is high and the _performance count_ identifier value is less than 16.
 
 Once a sufficient number of _self_ and _other_ views have been compared, the _retinaCells_ are ordered by the accumulated performance counts of their components. Those _retinaCells_ with the highest accumulated component performance counts are retained as the _retinaCells_ of the signature with the low performance count components ignored.
 

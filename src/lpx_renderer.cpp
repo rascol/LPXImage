@@ -58,6 +58,10 @@ void lpx::LPXRenderer::getRGBFromLPCell(uint32_t lpCell, uint8_t& r, uint8_t& g,
     if (lpCell != 0 && r + g + b > 0) {
         static int debugCount = 0;
         debugCount++;
+        if (debugCount <= 5) {
+            std::cout << "[DEBUG] getRGBFromLPCell: cell=0x" << std::hex << lpCell << std::dec
+                      << " -> r=" << (int)r << " g=" << (int)g << " b=" << (int)b << std::endl;
+        }
     }
 }
 

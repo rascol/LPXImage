@@ -1,4 +1,3 @@
-cat > .gitignore << 'EOF'
 # Build directory
 build/
 
@@ -22,7 +21,29 @@ Makefile
 *.out
 *.app
 
+# Python compiled files
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+
+# Virtual environments
+lpximage-env/
+venv/
+env/
+
 # macOS specific
 .DS_Store
-EOF
+
+# Environment files
 .env
+
+# Test files and temporary files
+test_*.py
+!test_saccade_mode.py
+!test_color_fix.py
+!test_client_simple.py
+!test_optimized_client.py
+*.tmp
+*.bak
+*.orig

@@ -20,92 +20,18 @@ void logTiming(const std::string& operation, std::chrono::high_resolution_clock:
 
 #define TIME_OPERATION(name, code) { auto start = std::chrono::high_resolution_clock::now(); code; logTiming(name, start); }
 
-// FileLPXProtocol implementation
-bool FileLPXProtocol::sendLPXImage(int socket, const std::shared_ptr<LPXImage>& image) {
-    std::cout << "[DEBUG] FileLPXProtocol: Sending LPX image" << std::endl;
-    
-    // Use the existing LPXStreamProtocol directly (no command type prefix for image broadcasts)
-    // Command types are only used for client-to-server communication
-    return LPXStreamProtocol::sendLPXImage(socket, image);
-}
-
-bool FileLPXProtocol::sendMovementCommand(int socket, float deltaX, float deltaY, float stepSize) {
-    std::cout << "[DEBUG] FileLPXProtocol: Sending movement command (" << deltaX << ", " << deltaY << ")" << std::endl;
-    
-    // Send command type
-    uint32_t cmdType = CMD_MOVEMENT;
-    if (send(socket, &cmdType, sizeof(cmdType), 0) != sizeof(cmdType)) {
-        std::cerr << "[ERROR] Failed to send movement command type" << std::endl;
-        return false;
-    }
-    
-    // Send movement data
-    MovementCommand cmd = {deltaX, deltaY, stepSize};
-    if (send(socket, &cmd, sizeof(cmd), 0) != sizeof(cmd)) {
-        std::cerr << "[ERROR] Failed to send movement command data" << std::endl;
-        return false;
-    }
-    
-    return true;
-}
-
-uint32_t FileLPXProtocol::receiveCommand(int socket, void* data, size_t maxSize) {
-    // COMMAND RECEPTION RE-ENABLED WITH PROPER ERROR HANDLING
-    // We'll receive commands but with better error checking to prevent
-    // socket desynchronization issues
-    
-    uint32_t cmdType;
-    ssize_t received = recv(socket, &cmdType, sizeof(cmdType), MSG_DONTWAIT);
-    
-    if (received == sizeof(cmdType)) {
-        // Successfully received command type
-        if (cmdType == CMD_MOVEMENT) {
-            // Receive movement command data
-            MovementCommand cmd;
-            received = recv(socket, &cmd, sizeof(cmd), MSG_DONTWAIT);
-            if (received == sizeof(cmd)) {
-                // Copy command data to output buffer if provided
-                if (data && maxSize >= sizeof(cmd)) {
-                    memcpy(data, &cmd, sizeof(cmd));
-                }
-                return cmdType;
-            } else {
-                std::cerr << "[ERROR] Failed to receive complete movement command data" << std::endl;
-                return 0;
-            }
-        } else {
-            std::cerr << "[ERROR] Unknown command type: 0x" << std::hex << cmdType << std::dec << std::endl;
-            return 0;
-        }
-    } else if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-        // No data available (non-blocking), this is normal
-        return 0;
-    } else {
-        // Error or partial read
-        if (received == 0) {
-            std::cout << "[DEBUG] Client disconnected during command reception" << std::endl;
-        } else {
-            std::cerr << "[ERROR] Failed to receive command type: " << strerror(errno) << std::endl;
-        }
-        return 0;
-    }
-}
-
 // FileLPXServer implementation
 FileLPXServer::FileLPXServer(const std::string& scanTableFile, int port) 
     : port(port), serverSocket(-1), commandSocket(-1), running(false), targetFPS(30.0f), loopVideo{false},
       currentFrame(0), centerXOffset(0.0f), centerYOffset(0.0f), restartVideoFlag{false} {
     
     // Initialize scan tables
-TIME_OPERATION("Scan table loading", {
-        scanTables = std::make_shared<LPXTables>(scanTableFile);
-    });
+    scanTables = std::make_shared<LPXTables>(scanTableFile);
     if (!scanTables->isInitialized()) {
         throw std::runtime_error("Failed to initialize scan tables from: " + scanTableFile);
     }
 
     g_scanTables = scanTables;
-    std::cout << "[DEBUG] FileLPXServer constructor: loopVideo initialized to " << loopVideo.load() << std::endl;
 }
 
 FileLPXServer::~FileLPXServer() {
@@ -187,8 +113,9 @@ TIME_OPERATION("Video property reading", {
     
     running = true;
     
-    // Start threads
-    videoThreadHandle = std::thread(&FileLPXServer::videoThread, this);
+    // Start threads (matching WebcamLPXServer architecture)
+    captureThreadHandle = std::thread(&FileLPXServer::captureThread, this);
+    processingThreadHandle = std::thread(&FileLPXServer::processingThread, this);
     networkThreadHandle = std::thread(&FileLPXServer::networkThread, this);
     acceptThreadHandle = std::thread(&FileLPXServer::acceptClients, this);
     
@@ -203,6 +130,7 @@ void FileLPXServer::stop() {
     running = false;
     
     // Wake up waiting threads
+    frameCondition.notify_all();
     lpxImageCondition.notify_all();
     
     // Close server socket first to stop accepting new connections
@@ -235,11 +163,16 @@ void FileLPXServer::stop() {
         clientSockets.clear();
     }
     
-    // Join video thread last
-    if (videoThreadHandle.joinable()) {
-        std::cout << "Waiting for video thread to stop..." << std::endl;
-        videoThreadHandle.join();
-        std::cout << "Video thread stopped" << std::endl;
+    // Join capture and processing threads
+    if (captureThreadHandle.joinable()) {
+        std::cout << "Waiting for capture thread to stop..." << std::endl;
+        captureThreadHandle.join();
+        std::cout << "Capture thread stopped" << std::endl;
+    }
+    if (processingThreadHandle.joinable()) {
+        std::cout << "Waiting for processing thread to stop..." << std::endl;
+        processingThreadHandle.join();
+        std::cout << "Processing thread stopped" << std::endl;
     }
     
     // Close video
@@ -254,12 +187,13 @@ int FileLPXServer::getClientCount() {
 }
 
 void FileLPXServer::setLooping(bool loop) {
-    std::cout << "[DEBUG] FileLPXServer::setLooping IMPLEMENTATION called with: " << (loop ? "true" : "false") << std::endl;
-    std::cout << "[DEBUG] Current loopVideo address: " << &loopVideo << std::endl;
-    std::cout << "[DEBUG] About to assign value " << loop << " to loopVideo atomic" << std::endl;
-    loopVideo = loop;  // Try direct assignment instead of .store()
-    std::cout << "[DEBUG] FileLPXServer::setLooping - atomic value is now: " << loopVideo.load() << std::endl;
-    std::cout << "[DEBUG] FileLPXServer::setLooping IMPLEMENTATION completed" << std::endl;
+    loopVideo = loop;
+}
+
+void FileLPXServer::setCenterOffset(float x, float y) {
+    centerXOffset = x;
+    centerYOffset = y;
+    std::cout << "[DEBUG] FileLPXServer: Center offset set to (" << x << ", " << y << ")" << std::endl;
 }
 
 void FileLPXServer::handleMovementCommand(const MovementCommand& cmd) {
@@ -300,31 +234,18 @@ void FileLPXServer::handleMovementCommand(const MovementCommand& cmd) {
     std::cout << "[DEBUG] New center offset (bounded): (" << centerXOffset << ", " << centerYOffset << ")" << std::endl;
 }
 
-void FileLPXServer::videoThread() {
-    float frameDelayMs = 1000.0f / targetFPS;
-    std::cout << "Frame delay: " << frameDelayMs << "ms" << std::endl;
+void FileLPXServer::captureThread() {
+    std::cout << "Video file capture thread started" << std::endl;
     
-    bool isFirstFrame = true;
+    // Calculate frame interval based on target FPS
+    float currentTargetFPS = targetFPS.load();
+    auto frameInterval = std::chrono::microseconds(static_cast<int64_t>(1000000.0f / currentTargetFPS));
+    std::cout << "[DEBUG] Target FPS: " << currentTargetFPS << ", frame interval: " 
+              << frameInterval.count() << "μs (" << (frameInterval.count() / 1000.0f) << "ms)" << std::endl;
+    
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
     
     while (running) {
-        // Check if video restart is requested
-        if (restartVideoFlag.load()) {
-            videoCapture.set(cv::CAP_PROP_POS_FRAMES, 0);
-            currentFrame = 0;
-            restartVideoFlag = false;
-        }
-        
-        // Skip processing if no clients connected
-        {
-            std::lock_guard<std::mutex> lock(clientsMutex);
-            if (clientSockets.empty()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-                continue;
-            }
-        }
-        
-        // Read a frame from the video
         cv::Mat frame;
         if (!videoCapture.read(frame)) {
             // End of video
@@ -339,30 +260,90 @@ void FileLPXServer::videoThread() {
             }
         }
         
+        // Convert from RGB to BGR since video files provide RGB data 
+        // but OpenCV and our scanning pipeline expect BGR format
+        cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
+        
         currentFrame++;
         
-        // Convert to RGB (LPXImage expects RGB format)
-        cv::Mat frameRGB;
-        cv::cvtColor(frame, frameRGB, cv::COLOR_BGR2RGB);
-        
         // Resize if necessary
-        if (frameRGB.cols != outputWidth || frameRGB.rows != outputHeight) {
-            cv::resize(frameRGB, frameRGB, cv::Size(outputWidth, outputHeight));
+        if (frame.cols != outputWidth || frame.rows != outputHeight) {
+            cv::resize(frame, frame, cv::Size(outputWidth, outputHeight));
         }
         
-        // Process the frame with LPX transform
-        auto lpxProcessStart = std::chrono::high_resolution_clock::now();
-        float centerX = outputWidth / 2.0f + centerXOffset;
-        float centerY = outputHeight / 2.0f + centerYOffset;
-        
-        auto lpxImage = multithreadedScanImage(frameRGB, centerX, centerY);
-        auto lpxProcessEnd = std::chrono::high_resolution_clock::now();
-        auto lpxDuration = std::chrono::duration_cast<std::chrono::milliseconds>(lpxProcessEnd - lpxProcessStart).count();
-        
-        // Log slow LPX processing
-        if (lpxDuration > 100) {  // Log if processing takes more than 100ms
-            std::cout << "[TIMING] LPX processing took: " << lpxDuration << "ms (slow!)" << std::endl;
+        // Simple approach: Add every frame to processing queue (like early webcam servers)
+        {
+            std::unique_lock<std::mutex> lock(frameMutex);
+            
+            // Prevent queue from growing too large
+            while (frameQueue.size() >= 3) {
+                frameQueue.pop();
+            }
+            
+            frameQueue.push(frame.clone());
+            lock.unlock();
+            
+            frameCondition.notify_one();
         }
+        
+        // Sleep to maintain target FPS
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = now - lastFrameTime;
+        
+        if (elapsed < frameInterval) {
+            auto sleepTime = frameInterval - elapsed;
+            std::this_thread::sleep_for(sleepTime);
+        }
+        
+        // Update target FPS if it changed
+        float newTargetFPS = targetFPS.load();
+        if (newTargetFPS != currentTargetFPS) {
+            currentTargetFPS = newTargetFPS;
+            frameInterval = std::chrono::microseconds(static_cast<int64_t>(1000000.0f / currentTargetFPS));
+            std::cout << "[DEBUG] Updated target FPS to: " << currentTargetFPS 
+                      << ", new frame interval: " << frameInterval.count() << "μs" << std::endl;
+        }
+        
+        lastFrameTime = std::chrono::high_resolution_clock::now();
+        
+        // Report progress periodically
+        if (currentFrame % 100 == 0 || currentFrame == totalFrames) {
+            std::cout << "Captured frame " << currentFrame << "/" << totalFrames 
+                      << " (" << (100.0f * currentFrame / totalFrames) << "%)" << std::endl;
+        }
+    }
+    
+    std::cout << "Capture thread stopped" << std::endl;
+}
+
+void FileLPXServer::processingThread() {
+    std::cout << "[DEBUG] File server processing thread started" << std::endl;
+    while (running) {
+        cv::Mat frameToProcess;
+        
+        // Wait for a frame to process
+        {
+            std::unique_lock<std::mutex> lock(frameMutex);
+            while (frameQueue.empty() && running) {
+                frameCondition.wait(lock);
+            }
+            
+            if (!running) break;
+            
+            std::cout << "[DEBUG] Processing frame in file server thread" << std::endl;
+            frameToProcess = frameQueue.front();
+            frameQueue.pop();
+        }
+        
+        // Process the frame
+        auto startTime = std::chrono::high_resolution_clock::now();
+        
+        // Center the LPX scan at the center of the image with offsets
+        float centerX = frameToProcess.cols / 2.0f + centerXOffset;
+        float centerY = frameToProcess.rows / 2.0f + centerYOffset;
+        
+        // Use the existing multithreaded scanning function
+        auto lpxImage = multithreadedScanImage(frameToProcess, centerX, centerY);
         
         if (lpxImage) {
             // Add to broadcast queue
@@ -377,35 +358,18 @@ void FileLPXServer::videoThread() {
             lock.unlock();
             
             lpxImageCondition.notify_one();
-            
-            // Report progress periodically
-            if (currentFrame % 100 == 0 || currentFrame == totalFrames) {
-                std::cout << "Processed frame " << currentFrame << "/" << totalFrames 
-                          << " (" << (100.0f * currentFrame / totalFrames) << "%)" << std::endl;
-            }
         }
         
-        if (isFirstFrame) {
-            isFirstFrame = false;
-        }
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         
-        // Control FPS - but only after first frame is processed
-        if (!isFirstFrame) {
-            auto now = std::chrono::high_resolution_clock::now();
-            auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-                now - lastFrameTime).count();
-            
-            if (elapsedMs < frameDelayMs) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(
-                    static_cast<int>(frameDelayMs - elapsedMs)));
-            }
+        // Log slow processing
+        if (duration > 100) {
+            std::cout << "[TIMING] LPX processing took: " << duration << "ms (slow!)" << std::endl;
         }
-        
-        // Update lastFrameTime AFTER first frame processing is complete
-        lastFrameTime = std::chrono::high_resolution_clock::now();
     }
     
-    std::cout << "Video thread stopped" << std::endl;
+    std::cout << "Processing thread stopped" << std::endl;
 }
 
 void FileLPXServer::networkThread() {
@@ -433,14 +397,14 @@ void FileLPXServer::networkThread() {
             for (int clientSocket : clientSockets) {
                 // Check for incoming movement commands first
                 MovementCommand cmd;
-                uint32_t cmdType = FileLPXProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
-                if (cmdType == FileLPXProtocol::CMD_MOVEMENT) {
+                uint32_t cmdType = LPXStreamProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
+                if (cmdType == LPXStreamProtocol::CMD_MOVEMENT) {
                     std::cout << "[DEBUG] Received movement command from client " << clientSocket << std::endl;
                     handleMovementCommand(cmd);
                 }
                 
                 // Send image
-                if (!FileLPXProtocol::sendLPXImage(clientSocket, imageToSend)) {
+                if (!LPXStreamProtocol::sendLPXImage(clientSocket, imageToSend)) {
                     disconnectedClients.push_back(clientSocket);
                     continue;
                 }
@@ -486,32 +450,16 @@ void FileLPXServer::acceptClients() {
                 std::cerr << "Warning: Failed to set send buffer size" << std::endl;
             }
             
-            // Add to clients set (no per-client threads)
-            bool isFirstClient = false;
+            // Add to clients set (matches WebcamLPXServer behavior)
             {
                 std::lock_guard<std::mutex> lock(clientsMutex);
-                isFirstClient = clientSockets.empty();
-                std::cout << "[DEBUG] Client count before adding: " << clientSockets.size() 
-                          << ", isFirstClient: " << isFirstClient << std::endl;
                 clientSockets.insert(clientSocket);
                 
                 // Set client socket to non-blocking for command polling
                 int flags = fcntl(clientSocket, F_GETFL, 0);
                 fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK);
                 
-                std::cout << "[DEBUG] Client " << clientSocket << " added to active set" << std::endl;
-            }
-            
-            // If this is the first client, signal video thread to restart for sync
-            if (isFirstClient) {
-                std::cout << "First client connected - signaling video restart for sync" << std::endl;
-                restartVideoFlag = true; // Signal video thread to restart
-                
-                // Clear any old frames from queue
-                std::lock_guard<std::mutex> queueLock(lpxImageMutex);
-                while (!lpxImageQueue.empty()) {
-                    lpxImageQueue.pop();
-                }
+                std::cout << "[DEBUG] Client " << clientSocket << " added to active set. Total clients: " << clientSockets.size() << std::endl;
             }
         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
             // An actual error occurred
@@ -520,8 +468,8 @@ void FileLPXServer::acceptClients() {
             }
         }
         
-        // Sleep briefly to avoid CPU burnout - reduced for faster client acceptance
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // Sleep briefly to avoid CPU burnout - matches WebcamLPXServer timing
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
     std::cout << "Accept thread stopped" << std::endl;

@@ -18,23 +18,7 @@
 
 namespace lpx {
 
-// Extended protocol for file server with movement support (reusing MovementCommand from webcam server)
-class FileLPXProtocol {
-public:
-    enum CommandType : uint32_t {
-        CMD_LPX_IMAGE = 0x01,
-        CMD_MOVEMENT = 0x02
-    };
-    
-    // Send an LPXImage
-    static bool sendLPXImage(int socket, const std::shared_ptr<LPXImage>& image);
-    
-    // Send a movement command to server
-    static bool sendMovementCommand(int socket, float deltaX, float deltaY, float stepSize = 10.0f);
-    
-    // Receive a command (returns command type)
-    static uint32_t receiveCommand(int socket, void* data, size_t maxSize);
-};
+// FileLPXServer uses LPXStreamProtocol from webcam server - no separate protocol needed
 
 class FileLPXServer {
 public:
@@ -54,10 +38,7 @@ public:
     bool isLooping() const { return loopVideo.load(); }
     
     // Set log-polar center offset
-    void setCenterOffset(float x_offset, float y_offset) {
-        centerXOffset = x_offset;
-        centerYOffset = y_offset;
-    }
+    void setCenterOffset(float x_offset, float y_offset);
     
     // Check client count
     int getClientCount();
@@ -66,8 +47,9 @@ public:
     void handleMovementCommand(const MovementCommand& cmd);
     
 private:
-    // Thread functions
-    void videoThread();
+    // Thread functions (matching WebcamLPXServer architecture)
+    void captureThread();  // Read frames from video file
+    void processingThread();  // Process frames with current offset
     void networkThread();
     void acceptClients();
     void handleClient(int clientSocket);
@@ -88,6 +70,11 @@ private:
     float centerXOffset = 0.0f;
     float centerYOffset = 0.0f;
     
+    // Frame queue (like WebcamLPXServer)
+    std::mutex frameMutex;
+    std::condition_variable frameCondition;
+    std::queue<cv::Mat> frameQueue;
+    
     // LPXImage queue
     std::mutex lpxImageMutex;
     std::condition_variable lpxImageCondition;
@@ -97,12 +84,12 @@ private:
     std::mutex clientsMutex;
     std::set<int> clientSockets;
     
-    // Threading
+    // Threading (matching WebcamLPXServer)
     std::atomic<bool> running;
-    std::thread videoThreadHandle;
+    std::thread captureThreadHandle;
+    std::thread processingThreadHandle;
     std::thread networkThreadHandle;
     std::thread acceptThreadHandle;
-    std::thread commandThreadHandle;  // New thread for UDP commands
     
     // Network
     int serverSocket;  // TCP socket for streaming

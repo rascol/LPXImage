@@ -81,12 +81,24 @@ add_executable(main_webcam_server
     src/main_webcam_server.cpp
 )
 
+# Add the file server executable
+add_executable(main_file_server 
+    src/main_file_server.cpp
+)
+
 # Add the debug renderer executable
 add_executable(main_debug_renderer 
     src/main_debug_renderer.cpp
 )
 
 target_link_libraries(main_webcam_server 
+    lpx_image
+    ${OpenCV_LIBS}
+    pthread
+)
+
+# Link libraries for file server
+target_link_libraries(main_file_server
     lpx_image
     ${OpenCV_LIBS}
     pthread

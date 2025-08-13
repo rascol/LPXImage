@@ -148,9 +148,22 @@ def handle_wasd_movement(saccade_port=None):
                 key = sys.stdin.read(1)
                 if key in move_map:
                     dx, dy = move_map[key]
+                    # TIMING: Record when key was pressed
+                    key_time = time.time() * 1000  # milliseconds
+                    print(f"[TIMING] Key '{key}' pressed at {key_time:.3f}ms")
+                    
                     current_x_offset += dx
                     current_y_offset += dy
+                    
+                    # TIMING: Record before setCenterOffset call
+                    before_set = time.time() * 1000
                     server.setCenterOffset(current_x_offset, current_y_offset)
+                    after_set = time.time() * 1000
+                    
+                    set_duration = after_set - before_set
+                    total_duration = after_set - key_time
+                    
+                    print(f"[TIMING] setCenterOffset took {set_duration:.3f}ms, total response: {total_duration:.3f}ms")
                     print(f"WASD Center: ({current_x_offset:.1f}, {current_y_offset:.1f})")
                 elif key == 'q':
                     break

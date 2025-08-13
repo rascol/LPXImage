@@ -118,10 +118,10 @@ void optimizedProcessImageRegion(const cv::Mat& image, int yStart, int yEnd,
                 color = cv::Vec3b(intensity, intensity, intensity);
             }
             
-            // Atomic accumulation (lock-free)
-            atomicAccR[iCell].fetch_add(color[2], std::memory_order_relaxed);
-            atomicAccG[iCell].fetch_add(color[1], std::memory_order_relaxed);
-            atomicAccB[iCell].fetch_add(color[0], std::memory_order_relaxed);
+            // Atomic accumulation in BGR order (OpenCV's native format)
+            atomicAccR[iCell].fetch_add(color[2], std::memory_order_relaxed);  // R channel
+            atomicAccG[iCell].fetch_add(color[1], std::memory_order_relaxed);  // G channel
+            atomicAccB[iCell].fetch_add(color[0], std::memory_order_relaxed);  // B channel
             atomicCount[iCell].fetch_add(1, std::memory_order_relaxed);
         }
     }
@@ -129,6 +129,7 @@ void optimizedProcessImageRegion(const cv::Mat& image, int yStart, int yEnd,
 
 // High-performance multithreaded scan with optimizations
 bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float x_center, float y_center) {
+    std::cout << "[DEBUG] Entering optimized multithreaded scan" << std::endl;
     auto totalStart = std::chrono::high_resolution_clock::now();
     
     auto sct = lpxImage->getScanTables();
@@ -180,7 +181,7 @@ bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float 
             
             const int cellIndex = (i <= sct->lastFoveaIndex && i < static_cast<int>(cellArray.size())) ? i : sct->outerPixelCellIdx[i];
             if (cellIndex >= 0 && cellIndex < static_cast<int>(cellArray.size())) {
-                // Pack color: BGR format
+                // Pack color in BGR format (OpenCV's native format)
                 cellArray[cellIndex] = (color[0]) | (color[1] << 8) | (color[2] << 16);
             }
         }
@@ -263,6 +264,7 @@ bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float 
             const int r = atomicAccR[i].load(std::memory_order_relaxed) / pixelCount;
             const int g = atomicAccG[i].load(std::memory_order_relaxed) / pixelCount;
             const int b = atomicAccB[i].load(std::memory_order_relaxed) / pixelCount;
+            // Pack in BGR format (OpenCV's native format)
             cellArray[i] = b | (g << 8) | (r << 16);  // BGR format
         } else if (i > sct->lastFoveaIndex) {
             cellArray[i] = 0;  // Black for empty peripheral cells

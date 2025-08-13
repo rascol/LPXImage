@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# lpx_file_server.py - Stream video from a file using FileLPXServer
+# lpx_file_server.py - Stream video from a file using FileLPXServer with instant WASD response
 import time
 import threading
 import signal
@@ -14,15 +14,10 @@ import socket
 try:
     import lpximage
 except ModuleNotFoundError:
-    # Try importing from build directory
-    try:
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'build'))
-        import lpximage
-    except ModuleNotFoundError:
-        print("ERROR: lpximage module not found!")
-        print("Please ensure LPXImage is properly installed on this machine.")
-        print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
-        sys.exit(1)
+    print("ERROR: lpximage module not found!")
+    print("Please ensure LPXImage is properly installed on this machine.")
+    print("Refer to INSTALL_PYTHON.md in the LPXImage directory for installation instructions.")
+    sys.exit(1)
 
 # Global variables
 server = None
@@ -49,8 +44,8 @@ def main():
     parser = argparse.ArgumentParser(description='LPX File Server - Stream video files with log-polar processing')
     parser.add_argument('--tables', default='../ScanTables63', help='Path to scan tables')
     parser.add_argument('--file', required=True, help='Path to video file')
-    parser.add_argument('--width', type=int, default=1920, help='Video width')
-    parser.add_argument('--height', type=int, default=1080, help='Video height')
+    parser.add_argument('--width', type=int, default=1920, help='Output video width')
+    parser.add_argument('--height', type=int, default=1080, help='Output video height')
     parser.add_argument('--port', type=int, default=5050, help='Server port')
     parser.add_argument('--saccade_port', type=int, default=5051, help='Port for saccade commands')
     parser.add_argument('--loop', action='store_true', help='Loop the video when it ends')
@@ -62,7 +57,7 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     
     # Print startup info
-    print(f"LPX File Server - Converting and streaming video from file")
+    print(f"LPX File Server - Streaming video from file")
     print(f"Video file: {args.file}")
     print(f"Resolution: {args.width}x{args.height}")
     print(f"Scan Tables: {args.tables}")
@@ -76,32 +71,29 @@ def main():
     current_y_offset = args.y_offset
     
     try:
-        # Initialize the server with scan tables and port
-        print(f"[TIMING] Initializing FileLPXServer...")
-        init_start = time.time() * 1000
-        server = lpximage.FileLPXServer(args.tables, args.port)
-        init_end = time.time() * 1000
-        print(f"[TIMING] FileLPXServer initialization took {init_end - init_start:.3f}ms")
+        # Initialize LPX processing
+        if not lpximage.initLPX(args.tables, args.width, args.height):
+            print("Failed to initialize LPX processing")
+            return
         
-        # Configure the server
-        config_start = time.time() * 1000
+        # Create FileLPXServer instance (correct constructor pattern)
+        server = lpximage.FileLPXServer(args.tables, args.port)
         if args.loop:
             server.setLooping(True)
+        
+        # Set high FPS for responsive WASD input
+        server.setFPS(60)  # Try 60 FPS for minimal delay
+        print(f"Set server FPS to 60 for responsive input")
+        
         server.setCenterOffset(current_x_offset, current_y_offset)
-        config_end = time.time() * 1000
-        print(f"[TIMING] Server configuration took {config_end - config_start:.3f}ms")
         
-        # Start the server with the specified video file and resolution
-        print(f"[TIMING] Starting server with video file...")
-        start_time = time.time() * 1000
+        # Start the server with video file and dimensions
         if not server.start(args.file, args.width, args.height):
-            print("Failed to start LPX file server. Check video file path.")
+            print("Failed to start server")
             return
-        start_end = time.time() * 1000
-        print(f"[TIMING] Server start took {start_end - start_time:.3f}ms")
-        
-        print(f"Server started and listening on port {args.port}")
+        print(f"FileLPXServer started and listening on port {args.port}")
         print("Waiting for clients to connect...")
+        
         print("\n=== WASD Movement Controls ===")
         print("Use WASD keys to control the log-polar transform center:")
         print("  W - Move up")
@@ -112,11 +104,11 @@ def main():
         print("  Q - Quit movement control")
         print("===========================\n")
         
-        # Start WASD movement thread
+        # Start WASD movement thread (same pattern as WebcamLPXServer)
         movement_thread = threading.Thread(target=handle_wasd_movement, args=(args.saccade_port,), daemon=True)
         movement_thread.start()
         
-        # Main server loop
+        # Main server loop (same pattern as WebcamLPXServer)
         while True:
             # Report status periodically
             client_count = server.getClientCount()
@@ -126,8 +118,6 @@ def main():
             # Add a short delay to allow signal handling
             time.sleep(1)
             
-            # You could add more server management code here
-            
     except Exception as e:
         print(f"Server error: {e}")
     finally:
@@ -136,10 +126,9 @@ def main():
             server.stop()
             print("Server stopped")
 
-
 def handle_wasd_movement(saccade_port=None):
-    """Handle WASD movement commands and saccade network commands."""
-    global current_x_offset, current_y_offset
+    """Handle WASD movement commands and saccade network commands (same as lpx_server.py)."""
+    global current_x_offset, current_y_offset, server
     
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -150,7 +139,7 @@ def handle_wasd_movement(saccade_port=None):
     if saccade_port:
         try:
             saccade_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            saccade_sock.setsockopt(socket.SOL_SOCKET, SO_REUSEADDR, 1)
+            saccade_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             saccade_sock.bind(('127.0.0.1', saccade_port))
             saccade_sock.listen(1)
             saccade_sock.setblocking(False)
@@ -165,70 +154,41 @@ def handle_wasd_movement(saccade_port=None):
 
     try:
         while True:
-            # Existing WASD handling (unchanged)
+            # WASD handling (exactly like lpx_server.py)
             if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
                 key = sys.stdin.read(1)
                 if key in move_map:
                     dx, dy = move_map[key]
-                    # TIMING: Record when key was pressed
-                    key_time = time.time() * 1000  # milliseconds
-                    print(f"[TIMING] Key '{key}' pressed at {key_time:.3f}ms")
-                    
                     current_x_offset += dx
                     current_y_offset += dy
-                    
-                    # TIMING: Record before setCenterOffset call
-                    before_set = time.time() * 1000
+                    # INSTANT: Call server.setCenterOffset() immediately!
                     server.setCenterOffset(current_x_offset, current_y_offset)
-                    after_set = time.time() * 1000
-                    
-                    set_duration = after_set - before_set
-                    total_duration = after_set - key_time
-                    
-                    print(f"[TIMING] setCenterOffset took {set_duration:.3f}ms, total response: {total_duration:.3f}ms")
                     print(f"WASD Center: ({current_x_offset:.1f}, {current_y_offset:.1f})")
                 elif key == 'q':
                     break
                 elif key == 'r':
                     current_x_offset = current_y_offset = 0.0
-                    reset_time = time.time() * 1000
                     server.setCenterOffset(current_x_offset, current_y_offset)
-                    after_reset = time.time() * 1000
-                    print(f"[TIMING] Reset setCenterOffset took {after_reset - reset_time:.3f}ms")
                     print("Reset to center (0, 0)")
 
-            # Visual Saccade Support: Check for saccade commands on separate port
+            # Saccade commands (exactly like lpx_server.py)
             if saccade_sock:
                 try:
-                    conn, addr = saccade_sock.accept()
+                    conn, _ = saccade_sock.accept()
                     conn.setblocking(False)
                     try:
                         data = conn.recv(1024).decode().strip()
                         if data:
-                            saccade_time = time.time() * 1000
                             x_rel, y_rel = map(float, data.split(','))
                             current_x_offset += x_rel
                             current_y_offset += y_rel
-                            
-                            before_saccade = time.time() * 1000
+                            # INSTANT: Call server.setCenterOffset() immediately!
                             server.setCenterOffset(current_x_offset, current_y_offset)
-                            after_saccade = time.time() * 1000
-                            
-                            saccade_duration = after_saccade - before_saccade
-                            total_saccade = after_saccade - saccade_time
-                            
-                            print(f"[TIMING] Visual saccade setCenterOffset took {saccade_duration:.3f}ms, total: {total_saccade:.3f}ms")
-                            print(f"Visual Saccade from {addr}: ({x_rel:+.1f}, {y_rel:+.1f}) -> ({current_x_offset:.1f}, {current_y_offset:.1f})")
-                    except Exception as e:
-                        # Silently handle connection errors
+                            print(f"Saccade: ({x_rel:+.1f}, {y_rel:+.1f}) -> ({current_x_offset:.1f}, {current_y_offset:.1f})")
+                    except:
                         pass
-                    finally:
-                        try:
-                            conn.close()
-                        except:
-                            pass
-                except socket.error:
-                    # No incoming saccade connections, continue
+                    conn.close()
+                except:
                     pass
 
             time.sleep(0.05)
@@ -237,7 +197,6 @@ def handle_wasd_movement(saccade_port=None):
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         if saccade_sock:
             saccade_sock.close()
-
 
 if __name__ == "__main__":
     main()
