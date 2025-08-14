@@ -94,8 +94,8 @@ with open('README.md', 'r') as f:
 setup(
     name='lpximage',
     version=__version__,
-    author='LPXImage Team',
-    author_email='example@example.com',
+    author='Raymond Connell',
+    author_email='ray@rayconnell.com',
     description='Python bindings for the LPXImage library',
     long_description=long_description,
     long_description_content_type='text/markdown',
