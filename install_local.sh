@@ -56,12 +56,7 @@ if ls $PYTHON_MODULE 1> /dev/null 2>&1; then
     cp $PYTHON_MODULE "$PROJECT_ROOT/"
     echo "Python module copied to project root."
     
-    # Also copy shared libraries to project root for Python module to find them
-    if [ -d "$PROJECT_ROOT/lib" ]; then
-        echo "Copying shared libraries to project root for Python module..."
-        cp "$PROJECT_ROOT/lib/liblpx_image."*.dylib "$PROJECT_ROOT/" 2>/dev/null || \
-        cp "$PROJECT_ROOT/lib/liblpx_image."*.so "$PROJECT_ROOT/" 2>/dev/null || echo "No shared libraries found"
-    fi
+    # Libraries stay in lib/ directory - RPATH will find them automatically
 else
     echo "Warning: Python module not found"
 fi
