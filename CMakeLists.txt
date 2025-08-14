@@ -20,12 +20,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # RPATH settings for robust library loading
 if(APPLE)
     # macOS RPATH settings
-    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/../lib;@loader_path/../../lib")
+    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/lib;@loader_path/../lib;@loader_path/../../lib")
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_MACOSX_RPATH ON)
 elseif(UNIX AND NOT APPLE)
     # Linux RPATH settings
-    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../lib")
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/lib:$ORIGIN/../lib:$ORIGIN/../../lib")
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 elseif(WIN32)
