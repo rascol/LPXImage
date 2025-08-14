@@ -95,7 +95,7 @@ setup(
     name='lpximage',
     version=__version__,
     author='Raymond Connell',
-    author_email='ray@rayconnell.com',
+    author_email='rayconnell@usa.net',
     description='Python bindings for the LPXImage library',
     long_description=long_description,
     long_description_content_type='text/markdown',
