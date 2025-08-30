@@ -26,10 +26,9 @@ namespace lpx {
 
 // Scan timing helper function
 void logScanTiming(const std::string& operation, std::chrono::high_resolution_clock::time_point start) {
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    std::cout << "[SCAN-TIMING] " << operation << " took: " << duration << "μs (" 
-              << std::fixed << std::setprecision(2) << (duration / 1000.0) << "ms)" << std::endl;
+    // Timing logging removed
+    (void)operation; // Silence unused parameter warning
+    (void)start;
 }
 
     namespace internal {
@@ -62,7 +61,6 @@ static cv::Vec3b getPixelColor(const cv::Mat& image, int y, int x) {
 bool LPXTables::load(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Failed to open scan tables file: " << filename << std::endl;
         return false;
     }
 
@@ -80,8 +78,7 @@ bool LPXTables::load(const std::string& filename) {
     
     // Force a valid value in case of bad read
     if (loadedSpiralPer < 0.1f || loadedSpiralPer > 1000.0f) {
-        std::cerr << "ERROR: Invalid spiralPer read from file: " << loadedSpiralPer << ", using default 63.5" << std::endl;
-        spiralPer = 63.5f;
+        spiralPer = 63.5f; // Use default for invalid values
     } else {
         spiralPer = loadedSpiralPer;
     }
@@ -186,10 +183,8 @@ void processImageRegion(const cv::Mat& image, int yStart, int yEnd,
                   std::mutex& accMutex) {
 
     // Set this thread to high priority
-    if (!set_high_priority()) {
-        std::cerr << "Warning: Could not set real-time priority for image processing" << std::endl;
-        // Continue with normal priority
-    }
+    // Set thread priority
+    set_high_priority();
     
     // Local accumulators for this thread
     std::vector<int> localAccR(accR.size(), 0);
@@ -317,7 +312,6 @@ static uint32_t packColor(int r, int g, int b) {
 bool LPXImage::loadFromFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Failed to open file for reading: " << filename << std::endl;
         return false;
     }
     
@@ -336,8 +330,7 @@ bool LPXImage::loadFromFile(const std::string& filename) {
 
     // Sanity check after loading
     if (spiralPer < 0.1f) {
-        std::cerr << "ERROR: Invalid spiralPer loaded: " << spiralPer << ", using default of 63.5" << std::endl;
-        spiralPer = 63.5f;
+        spiralPer = 63.5f; // Use default for invalid values
     }
     
     file.read(reinterpret_cast<char*>(&width), sizeof(int));
@@ -379,7 +372,7 @@ size_t LPXImage::getRawDataSize() const {
 // Multithreaded implementation of scanFromImage - OPTIMIZED VERSION
 bool multithreadedScanFromImage(LPXImage* lpxImage, const cv::Mat& image, float x_center, float y_center) {
     // Use the optimized implementation for 10x performance improvement
-    std::cout << "[DEBUG] multithreadedScanFromImage called - delegating to optimized scan" << std::endl;
+    // Delegating to optimized scan implementation
     return lpx::optimized::optimizedMultithreadedScan(lpxImage, image, x_center, y_center);
 }
 
@@ -435,9 +428,7 @@ lpx::Rect LPXImage::getScannedBox(float x_center, float y_center, int width, int
     box.yMax = height - (imgHt_2 - spRad) - k_ofs;
     if (box.yMax > height) box.yMax = height;
     
-    std::cout << "DEBUG: getScannedBox - center: (" << x_center << "," << y_center 
-              << "), spiralPer: " << spiralPer << ", length: " << length 
-              << ", calculated radius: " << spiralRadius << std::endl;
+    // Debug output removed
     
     return box;
 }
@@ -460,11 +451,44 @@ void LPXImage::unpackColor(uint32_t packed, int& r, int& g, int& b) const {
     r = (packed >> 16) & 0xFF;
 }
 
+// Color extraction methods for LPXVision
+int LPXImage::extractCellLuminance(uint32_t cellValue) const {
+    // Extract RGB components
+    int r, g, b;
+    unpackColor(cellValue, r, g, b);
+    
+    // Calculate luminance using standard formula: Y = 0.299*R + 0.587*G + 0.114*B
+    // Scale to range 0-1023 (as expected by JavaScript LPXVision)
+    double luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return static_cast<int>(luminance * 1023.0 / 255.0);
+}
+
+int LPXImage::extractCellGreenRed(uint32_t cellValue) const {
+    // Extract RGB components
+    int r, g, b;
+    unpackColor(cellValue, r, g, b);
+    
+    // Calculate green-red difference in range -1023 to +1023
+    int greenRed = g - r;
+    return greenRed * 1023 / 255;  // Scale to expected range
+}
+
+int LPXImage::extractCellYellowBlue(uint32_t cellValue) const {
+    // Extract RGB components
+    int r, g, b;
+    unpackColor(cellValue, r, g, b);
+    
+    // Calculate yellow-blue difference in range -1023 to +1023
+    // Yellow = (R + G) / 2, so Yellow - Blue = (R + G) / 2 - B
+    int yellow = (r + g) / 2;
+    int yellowBlue = yellow - b;
+    return yellowBlue * 1023 / 255;  // Scale to expected range
+}
+
 // Add saveToFile method for LPXImage
 bool LPXImage::saveToFile(const std::string& filename) const {
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Failed to open file for writing: " << filename << std::endl;
         return false;
     }
     
@@ -503,7 +527,6 @@ bool LPXImage::saveToFile(const std::string& filename) const {
 std::shared_ptr<LPXImage> multithreadedScanImage(const cv::Mat& image, float x_center, float y_center) {
     // Check if scan tables are initialized
     if (!g_scanTables || !g_scanTables->isInitialized()) {
-        std::cerr << "ERROR: No scan tables available for multithreaded scan" << std::endl;
         return nullptr;
     }
     
@@ -515,7 +538,7 @@ std::shared_ptr<LPXImage> multithreadedScanImage(const cv::Mat& image, float x_c
         return lpxImage;
     }
     
-    std::cerr << "ERROR: Multithreaded scan failed" << std::endl;
+    // Multithreaded scan failed
     return nullptr;
 }
 

@@ -1,6 +1,6 @@
 # Log-Polar Image
 
-This is a cross-platform implementation of the log-polar image transformation ([LogPolarImages.md](./LogPolarImages.md)) for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. This is the first of several modules that will ultimately provide a log-polar vision front end to an LLM.
+This is a cross-platform implementation of the log-polar image transformation ([LogPolarImages.md](./LogPolarImages.md)) for computer vision applications. This system provides a way to convert standard video streams to log-polar format and back, mimicking aspects of vertebrate vision. LPXVision code has also been successfully integrated into the LPXImage project. This integration includes an LPXVision extension that can provide visual input to a Large Language Model. A future module will provide a vision adapter based on LPXVision that will extend the capabilities of an LLM with log polar vision.
 
 ## Features
 

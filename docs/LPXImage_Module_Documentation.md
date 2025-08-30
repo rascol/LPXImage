@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `lpximage` Python module provides comprehensive interfaces for log-polar image transformation and related operations using the LPXImage C++ library. This module supports real-time video processing, webcam integration, file-based processing, and includes advanced features like frame synchronization for stable client-server communication.
+The `lpximage` Python module provides comprehensive interfaces for log-polar image transformation and related operations using the LPXImage C++ library. This module supports real-time video processing, webcam integration, file-based processing, and includes an LPXVision extension that can provide visual input to an LLM.
 
 ## Installation
 
@@ -31,6 +31,14 @@ if not lpximage.initLPX("path/to/scan_tables.bin"):
 # Load and process an image
 image_array = np.array(Image.open("image.jpg"))
 lpx_image = lpximage.scanImage(image_array, centerX=320, centerY=240)
+
+# Create vision processing object
+vision = lpximage.LPXVision()
+vision.makeVisionCells(lpx_image)
+
+# Access vision cell data and properties
+print(f"Number of cell types: {vision.numCellTypes}")
+print(f"Vision length: {vision.getViewLength()}")
 
 # Render back to standard image
 renderer = lpximage.LPXRenderer()
@@ -128,7 +136,7 @@ Webcam-based LPX server.
   - `getClientCount() -> int`: Gets client count.
 
 ### `LPXDebugClient`
-This method renders and displays an LPXImage video stream as a standard video stream.
+This class renders and displays an LPXImage video stream as a standard video stream.
 - **Methods**:
   - `connect(serverAddress: str) -> bool`: Connects to server.
   - `disconnect() -> None`: Disconnects from server.
@@ -139,3 +147,33 @@ This method renders and displays an LPXImage video stream as a standard video st
   - `setWindowTitle(title: str) -> None`: Sets display window title.
   - `setWindowSize(width: int, height: int) -> None`: Sets display window size in pixels.
   - `setScale(scale: float) -> None`: Sets scale.
+
+### `LPXVision`
+Provides vision processing capabilities on top of LPXImage data.
+- **Constructor**:
+  - `__init__(lpxImage: LPXImage = None)`: Creates an LPXVision object, optionally linked to an LPXImage.
+- **Attributes**:
+  - `spiralPer`: Spiral period value.
+  - `startIndex`: Start index of the vision cells.
+  - `startPer`: Start percentage of the spiral.
+  - `tilt`: Tilt value for cell orientation.
+  - `length`: Total length of all cell types.
+  - `viewlength`: Length of the current view.
+  - `viewIndex`: Current view index.
+  - `x_ofs`: X offset for positioning.
+  - `y_ofs`: Y offset for positioning.
+  - `numCellTypes`: Number of different cell types.
+  - `retinaCells`: Array of retina cell values.
+- **Methods**:
+  - `getCellIdentifierName(i: int) -> str`: Get the string name of the LPXVision cell identifiers.
+  - `getViewStartIndex() -> int`: Get the index into the vision cell buffers of the start of the view range.
+  - `getViewLength(spiralPer: float = 0.0) -> int`: Get the total number of LPXVision cell locations in the view range.
+  - `makeVisionCells(lpImage: LPXImage, lpD: LPXVision = None) -> None`: Construct LPXVision cells from an LPXImage object.
+
+### `vision_utils`
+A submodule of utility functions for vision processing.
+- **Functions**:
+  - `convertImageFormat(input: np.ndarray, output: np.ndarray, format: int) -> None`: Convert image format using OpenCV.
+  - `resizeImageKeepAspect(input: np.ndarray, output: np.ndarray, maxWidth: int, maxHeight: int) -> None`: Resize image while maintaining aspect ratio.
+  - `getTimestamp() -> str`: Get current timestamp as string.
+  - `logMessage(message: str) -> None`: Log a message with timestamp.

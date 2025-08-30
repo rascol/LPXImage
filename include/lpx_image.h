@@ -16,6 +16,11 @@
 #include <opencv2/opencv.hpp>
 #include "lpx_common.h"  // Include common definitions
 
+// Forward declarations
+namespace lpx_vision {
+    class LPXVision;
+}
+
 namespace lpx {
 
 // Position in standard 2D image
@@ -124,6 +129,14 @@ public:
     std::vector<int>& accessAccG() { return accG; }
     std::vector<int>& accessAccB() { return accB; }
     std::vector<int>& accessCount() { return count; }
+    
+    // Color extraction methods for LPXVision
+    int extractCellLuminance(uint32_t cellValue) const;
+    int extractCellGreenRed(uint32_t cellValue) const;
+    int extractCellYellowBlue(uint32_t cellValue) const;
+    
+    // Friend class for LPXVision access to private members
+    friend class lpx_vision::LPXVision;
 
 private:
     int length;                 // Number of cells in the cellArray

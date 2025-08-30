@@ -55,6 +55,9 @@ add_library(lpx_image SHARED
     src/lpx_webcam_server.cpp
     src/lpx_file_server.cpp  # Added file server implementation
     src/lpx_version.cpp      # Added version tracking
+    src/lpx_vision.cpp       # LPXVision main class
+    src/lpx_vision_core.cpp  # LPXVision core functionality
+    src/lpx_vision_utils.cpp # LPXVision utility functions
 )
 
 # This ensures that executable targets can see the symbols from the lpx_image library
@@ -163,5 +166,8 @@ install(FILES
     include/lpx_mt.h
     include/lpx_webcam_server.h
     include/lpx_file_server.h
+    include/lpx_vision.h
+    include/lpx_vision_core.h
+    include/lpx_vision_utils.h
     DESTINATION include
 )

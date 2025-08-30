@@ -53,13 +53,5 @@ namespace lpx {
         std::cout << "============================================================" << std::endl;
     }
     
-    // Static initialization to print build info when library is loaded
-    namespace {
-        struct BuildInfoPrinter {
-            BuildInfoPrinter() {
-                printBuildInfo();
-            }
-        };
-        static BuildInfoPrinter buildInfoPrinter;
-    }
+    // Static initialization removed - no automatic printing
 }

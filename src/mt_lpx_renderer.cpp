@@ -38,10 +38,8 @@ extern bool set_high_priority();
 
 
     // Set this thread to high priority
-    if (!set_high_priority()) {
-        std::cerr << "Warning: Could not set high priority for image processing" << std::endl;
-        // Continue with normal priority
-    }
+    // Set this thread to high priority
+    set_high_priority();
      
      // Process each row in the assigned region
      for (int y = rowStart; y < rowEnd; y++) {
@@ -145,21 +143,18 @@ extern bool set_high_priority();
  }
  
  bool LPXRenderer::setScanTables(const std::shared_ptr<LPXTables>& tables) {
-     if (!tables) {
-         std::cerr << "ERROR: Null tables provided to setScanTables" << std::endl;
-         return false;
-     }
+    if (!tables) {
+        return false;
+    }
      
-     if (!tables->isInitialized()) {
-         std::cerr << "ERROR: Uninitialized tables provided to setScanTables" << std::endl;
-         return false;
-     }
+    if (!tables->isInitialized()) {
+        return false;
+    }
      
      // Verify spiralPer is valid
-     if (tables->spiralPer < 0.1f || tables->spiralPer > 1000.0f) {
-         std::cerr << "ERROR: Invalid spiralPer in tables: " << tables->spiralPer << ", not adding" << std::endl;
-         return false;
-     }
+    if (tables->spiralPer < 0.1f || tables->spiralPer > 1000.0f) {
+        return false;
+    }
      
      scanTablesByPeriod[tables->spiralPer] = tables;
      
@@ -190,27 +185,26 @@ extern bool set_high_priority();
      float spiralRadius = getSpiralRadius(lpxImage->getLength(), lpxImage->getSpiralPeriod());
      int spRad = static_cast<int>(std::floor(spiralRadius + 0.5f));  // Manual rounding
      
-     std::cout << "DEBUG: spiralRadius: " << spiralRadius << ", spRad: " << spRad << std::endl;
+    // Debug output removed
      
      int boundLeft = -spRad;
      int boundRight = spRad;
      int boundTop = spRad;
      int boundBottom = -spRad;
  
-     if (boundLeft < -10000 || boundRight > 10000 || boundTop > 10000 || boundBottom < -10000) {
-         std::cerr << "ERROR: Unreasonable bounds calculated, using defaults" << std::endl;
-         boundLeft = -800;
-         boundRight = 800;
-         boundTop = 800;
-         boundBottom = -800;
-     }
+    if (boundLeft < -10000 || boundRight > 10000 || boundTop > 10000 || boundBottom < -10000) {
+        // Use default bounds for unreasonable values
+        boundLeft = -800;
+        boundRight = 800;
+        boundTop = 800;
+        boundBottom = -800;
+    }
      
      // Get the image limits
      int imgWid_2 = static_cast<int>(std::floor(0.5f * width + 0.5f));  // Manual rounding
      int imgHt_2 = static_cast<int>(std::floor(0.5f * height + 0.5f));  // Manual rounding
  
-     std::cout << "DEBUG: boundLeft: " << boundLeft << ", boundRight: " << boundRight << ", boundTop: " << boundTop << ", boundBottom: " << boundBottom << std::endl;
-     std::cout << "DEBUG: imgWid_2: " << imgWid_2 << ", imgHt_2: " << imgHt_2 << std::endl;
+    // Debug output removed
      
      // Get the center of the output image
      int imgCenterX = width / 2;
@@ -241,10 +235,9 @@ extern bool set_high_priority();
  
  cv::Mat LPXRenderer::renderToImage(const std::shared_ptr<LPXImage>& lpxImage, int width, int height, 
                                     float scale, int cellOffset, int cellRange) {
-     if (!lpxImage || lpxImage->getLength() <= 0) {
-         std::cerr << "Invalid LPXImage or empty" << std::endl;
-         return cv::Mat();
-     }
+    if (!lpxImage || lpxImage->getLength() <= 0) {
+        return cv::Mat();
+    }
      
      float spiralPer = lpxImage->getSpiralPeriod();
      
@@ -260,15 +253,9 @@ extern bool set_high_priority();
          }
      }
      
-     if (!foundTables) {
-         std::cerr << "No scan tables available for spiral period " << spiralPer << std::endl;
-         std::cout << "DEBUG: Available scan tables: ";
-         for (const auto& entry : scanTablesByPeriod) {
-             std::cout << entry.first << " ";
-         }
-         std::cout << std::endl;
-         return cv::Mat();
-     }
+    if (!foundTables) {
+        return cv::Mat();
+    }
      
      // Create output image
      cv::Mat output(height, width, CV_8UC3, cv::Scalar(0, 0, 0));
@@ -346,12 +333,7 @@ extern bool set_high_priority();
          }
      }
      
-     if (!nonZeroFoveaCells.empty()) {
-         for (int i = 0; i < std::min(10, static_cast<int>(nonZeroFoveaCells.size())); i++) {
-             std::cout << " " << nonZeroFoveaCells[i];
-         }
-         std::cout << std::endl;
-     }
+    // Debug output removed
      
      // Now process all cells
      for (int i = 0; i < maxLen; i++) {
@@ -378,7 +360,7 @@ extern bool set_high_priority();
      // Determine number of threads to use
      unsigned int numThreads = std::max(1u, std::thread::hardware_concurrency() - 1);
      if (numThreads == 0) numThreads = 1; // Safeguard
-     std::cout << "Using " << numThreads << " threads for image rendering" << std::endl;
+    // Thread count determined
      
      // Calculate the region height for each thread
      int rowsPerThread = (rowMax_s - rowMin_s) / numThreads;
@@ -414,9 +396,7 @@ extern bool set_high_priority();
          thread.join();
      }
      
-     auto endTime = std::chrono::high_resolution_clock::now();
-     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-     std::cout << "Multithreaded rendering completed in " << duration << " ms using " << numThreads << " threads" << std::endl;
+    // Rendering completed
      
      return output;
  }

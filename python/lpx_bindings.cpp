@@ -14,6 +14,9 @@
 #include "../include/lpx_webcam_server.h"
 #include "../include/lpx_file_server.h"  // Include file server header
 #include "../include/lpx_version.h"       // Include version header
+#include "../include/lpx_vision.h"        // Include LPXVision header
+#include "../include/lpx_vision_core.h"   // Include LPXVision core header
+#include "../include/lpx_vision_utils.h"  // Include LPXVision utils header
 #include <opencv2/opencv.hpp>
 #include <cstring>
 #include <iostream>
@@ -211,6 +214,47 @@ PYBIND11_MODULE(lpximage, m) {
             }
         }, py::arg("deltaX"), py::arg("deltaY"), py::arg("stepSize") = 10.0f);
     
+    // Bind LPXVision functionality
+    py::class_<lpx_vision::LPXVision>(m, "LPXVision")
+        .def(py::init<lpx::LPXImage*>(), py::arg("lpxImage") = nullptr,
+             "Create LPXVision object from LPXImage")
+        .def("getCellIdentifierName", &lpx_vision::LPXVision::getCellIdentifierName,
+             py::arg("i"), "Get the string name of the LPXVision cell identifiers")
+        .def("getViewStartIndex", &lpx_vision::LPXVision::getViewStartIndex,
+             "Get the index into the vision cell buffers of the start of the view range")
+        .def("getViewLength", &lpx_vision::LPXVision::getViewLength,
+             py::arg("spiralPer") = 0.0, "Get the total number of LPXVision cell locations in the view range")
+        .def("makeVisionCells", static_cast<void (lpx_vision::LPXVision::*)(lpx::LPXImage*, lpx_vision::LPXVision*)>(&lpx_vision::LPXVision::makeVisionCells),
+             py::arg("lpImage"), py::arg("lpD") = nullptr, "Construct LPXVision cells from an LPXImage object")
+        .def_readwrite("spiralPer", &lpx_vision::LPXVision::spiralPer)
+        .def_readwrite("startIndex", &lpx_vision::LPXVision::startIndex)
+        .def_readwrite("startPer", &lpx_vision::LPXVision::startPer)
+        .def_readwrite("tilt", &lpx_vision::LPXVision::tilt)
+        .def_readwrite("length", &lpx_vision::LPXVision::length)
+        .def_readwrite("viewlength", &lpx_vision::LPXVision::viewlength)
+        .def_readwrite("viewIndex", &lpx_vision::LPXVision::viewIndex)
+        .def_readwrite("x_ofs", &lpx_vision::LPXVision::x_ofs)
+        .def_readwrite("y_ofs", &lpx_vision::LPXVision::y_ofs)
+        .def_readwrite("numCellTypes", &lpx_vision::LPXVision::numCellTypes)
+        .def_readwrite("retinaCells", &lpx_vision::LPXVision::retinaCells);
+
+    // Bind LPXVision utility functions
+    py::module vision_utils = m.def_submodule("vision_utils", "LPXVision utility functions");
+    
+    vision_utils.def("convertImageFormat", &lpx_vision::utils::convertImageFormat,
+                     py::arg("input"), py::arg("output"), py::arg("format"),
+                     "Convert image format using OpenCV");
+                     
+    vision_utils.def("resizeImageKeepAspect", &lpx_vision::utils::resizeImageKeepAspect,
+                     py::arg("input"), py::arg("output"), py::arg("maxWidth"), py::arg("maxHeight"),
+                     "Resize image while maintaining aspect ratio");
+                     
+    vision_utils.def("getTimestamp", &lpx_vision::utils::getTimestamp,
+                     "Get current timestamp as string");
+                     
+    vision_utils.def("logMessage", &lpx_vision::utils::logMessage,
+                     py::arg("message"), "Log a message with timestamp");
+
     // Version information functions - timestamp-based versioning
     m.def("getVersionString", &lpx::getVersionString, "Get version string with build timestamp");
     m.def("getBuildTimestamp", &lpx::getBuildTimestamp, "Get full build timestamp (date and time)");

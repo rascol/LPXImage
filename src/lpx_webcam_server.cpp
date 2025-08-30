@@ -74,7 +74,6 @@ std::shared_ptr<LPXImage> LPXStreamProtocol::receiveLPXImage(int socket, std::sh
     
     // Sanity check
     if (totalSize <= 0 || totalSize > 10 * 1024 * 1024) { // Max 10MB
-        std::cerr << "Invalid LPXImage size: " << totalSize << std::endl;
         return nullptr;
     }
     
@@ -138,11 +137,9 @@ uint32_t LPXStreamProtocol::receiveCommand(int socket, void* data, size_t maxSiz
                 }
                 return cmdType;
             } else {
-                std::cerr << "[ERROR] Failed to receive complete movement command data" << std::endl;
                 return 0;
             }
         } else {
-            std::cerr << "[ERROR] Unknown command type: 0x" << std::hex << cmdType << std::dec << std::endl;
             return 0;
         }
     } else if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -150,11 +147,6 @@ uint32_t LPXStreamProtocol::receiveCommand(int socket, void* data, size_t maxSiz
         return 0;
     } else {
         // Error or partial read
-        if (received == 0) {
-            std::cout << "[DEBUG] Client disconnected during command reception" << std::endl;
-        } else {
-            std::cerr << "[ERROR] Failed to receive command type: " << strerror(errno) << std::endl;
-        }
         return 0;
     }
 }
@@ -185,14 +177,12 @@ bool WebcamLPXServer::start(int cameraId, int width, int height) {
     // Initialize server socket
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
-        std::cerr << "Error creating server socket" << std::endl;
         return false;
     }
     
     // Set socket options
     int opt = 1;
     if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        std::cerr << "Error setting socket options" << std::endl;
         close(serverSocket);
         return false;
     }
@@ -204,14 +194,12 @@ bool WebcamLPXServer::start(int cameraId, int width, int height) {
     serverAddr.sin_port = htons(port);
     
     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        std::cerr << "Error binding socket to port " << port << std::endl;
         close(serverSocket);
         return false;
     }
     
     // Listen for connections
     if (listen(serverSocket, 5) < 0) {
-        std::cerr << "Error listening on socket" << std::endl;
         close(serverSocket);
         return false;
     }
@@ -224,7 +212,7 @@ bool WebcamLPXServer::start(int cameraId, int width, int height) {
     networkThreadHandle = std::thread(&WebcamLPXServer::networkThread, this);
     acceptThreadHandle = std::thread(&WebcamLPXServer::acceptClients, this);
     
-    std::cout << "WebcamLPXServer started on port " << port << std::endl;
+    // Server started
     return true;
 }
 
@@ -258,7 +246,7 @@ void WebcamLPXServer::stop() {
     if (networkThreadHandle.joinable()) networkThreadHandle.join();
     if (acceptThreadHandle.joinable()) acceptThreadHandle.join();
     
-    std::cout << "WebcamLPXServer stopped" << std::endl;
+    // Server stopped
 }
 
 void WebcamLPXServer::setSkipRate(int min, int max, float motionThreshold) {
@@ -280,14 +268,11 @@ int WebcamLPXServer::getClientCount() {
 void WebcamLPXServer::setCenterOffset(float x, float y) {
     centerXOffset = x;
     centerYOffset = y;
-    std::cout << "[DEBUG] WebcamLPXServer: Center offset set to (" << x << ", " << y << ")" << std::endl;
+    // Center offset updated
 }
 
 void WebcamLPXServer::handleMovementCommand(const MovementCommand& cmd) {
-    auto cmdStartTime = std::chrono::high_resolution_clock::now();
-    std::cout << "[TIMER] Server received movement command at " << std::chrono::duration_cast<std::chrono::microseconds>(cmdStartTime.time_since_epoch()).count() << "μs" << std::endl;
-    std::cout << "[DEBUG] Handling movement command: (" << cmd.deltaX << ", " << cmd.deltaY 
-              << ") step=" << cmd.stepSize << std::endl;
+    // Handle movement command
     
     // Apply movement with step size
     centerXOffset += cmd.deltaX * cmd.stepSize;
@@ -301,8 +286,7 @@ void WebcamLPXServer::handleMovementCommand(const MovementCommand& cmd) {
         float maxOffsetX = scanTables->mapWidth * 0.2f;  // Allow center to move up to 20% of scan map width
         float maxOffsetY = scanTables->mapWidth * 0.2f;  // Assume square scan map for height
         
-        std::cout << "[DEBUG] Scan table mapWidth: " << scanTables->mapWidth 
-                  << ", max offset bounds: ±" << maxOffsetX << std::endl;
+        // Apply bounds based on scan table width
         
         centerXOffset = std::max(-maxOffsetX, std::min(maxOffsetX, centerXOffset));
         centerYOffset = std::max(-maxOffsetY, std::min(maxOffsetY, centerYOffset));
@@ -315,17 +299,13 @@ void WebcamLPXServer::handleMovementCommand(const MovementCommand& cmd) {
         centerYOffset = std::max(-maxOffsetY, std::min(maxOffsetY, centerYOffset));
     }
     
-    auto cmdEndTime = std::chrono::high_resolution_clock::now();
-    auto cmdDuration = std::chrono::duration_cast<std::chrono::microseconds>(cmdEndTime - cmdStartTime).count();
-    std::cout << "[TIMER] Server processed movement command in " << cmdDuration << "μs" << std::endl;
-    std::cout << "[DEBUG] New center offset (bounded): (" << centerXOffset << ", " << centerYOffset << ")" << std::endl;
+    // Movement command processed
 }
 
 void WebcamLPXServer::captureThread(int cameraId) {
     cv::VideoCapture cap(cameraId);
     
     if (!cap.isOpened()) {
-        std::cerr << "Failed to open webcam" << std::endl;
         running = false;
         return;
     }
@@ -337,12 +317,11 @@ void WebcamLPXServer::captureThread(int cameraId) {
     captureWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
     captureHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
     
-    std::cout << "Webcam initialized at " << captureWidth << "x" << captureHeight << std::endl;
+    // Webcam initialized
     
     while (running) {
         cv::Mat frame;
         if (!cap.read(frame)) {
-            std::cerr << "Failed to read frame from webcam" << std::endl;
             break;
         }
         
@@ -381,7 +360,7 @@ void WebcamLPXServer::captureThread(int cameraId) {
     }
     
     cap.release();
-    std::cout << "Capture thread stopped" << std::endl;
+    // Capture thread stopped
 }
 
 void WebcamLPXServer::processingThread() {
@@ -434,7 +413,7 @@ void WebcamLPXServer::processingThread() {
         adjustSkipRate(processingTime, false);
     }
     
-    std::cout << "Processing thread stopped" << std::endl;
+    // Processing thread stopped
 }
 
 void WebcamLPXServer::networkThread() {
@@ -463,7 +442,6 @@ void WebcamLPXServer::networkThread() {
                 MovementCommand cmd;
                 uint32_t cmdType = LPXStreamProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
                 if (cmdType == LPXStreamProtocol::CMD_MOVEMENT) {
-                    std::cout << "[DEBUG] Received movement command from client " << clientSocket << std::endl;
                     handleMovementCommand(cmd);
                 }
 
@@ -476,12 +454,12 @@ void WebcamLPXServer::networkThread() {
             for (int socket : disconnectedClients) {
                 close(socket);
                 clientSockets.erase(socket);
-                std::cout << "Client disconnected" << std::endl;
+                // Client disconnected
             }
         }
     }
     
-    std::cout << "Network thread stopped" << std::endl;
+    // Network thread stopped
 }
 
 void WebcamLPXServer::acceptClients() {
@@ -496,9 +474,7 @@ void WebcamLPXServer::acceptClients() {
         int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
         
         if (clientSocket >= 0) {
-            std::cout << "New client connected from " 
-                     << inet_ntoa(clientAddr.sin_addr) << ":" 
-                     << ntohs(clientAddr.sin_port) << std::endl;
+            // New client connected
             
             // Set client socket to non-blocking for command polling
             int flags = fcntl(clientSocket, F_GETFL, 0);
@@ -509,16 +485,14 @@ void WebcamLPXServer::acceptClients() {
             clientSockets.insert(clientSocket);
         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
             // An actual error occurred
-            if (running) {
-                std::cerr << "Error accepting client connection: " << strerror(errno) << std::endl;
-            }
+            // Connection error
         }
         
         // Sleep briefly to avoid CPU burnout
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
-    std::cout << "Accept thread stopped" << std::endl;
+    // Accept thread stopped
 }
 
 float WebcamLPXServer::detectMotion(const cv::Mat& current, const cv::Mat& previous) {
@@ -567,10 +541,7 @@ void WebcamLPXServer::adjustSkipRate(float processingTime, bool hasMotion) {
 LPXDebugClient::LPXDebugClient(const std::string& scanTableFile)
     : clientSocket(-1), running(false), lastKeyTime(std::chrono::steady_clock::now() - std::chrono::milliseconds(KEY_THROTTLE_MS + 1)) {
     
-    // Log version information
-    std::cout << "[VERSION] LPXDebugClient v" << getVersionString() << std::endl;
-    std::cout << "[VERSION] Built: " << getBuildTimestamp() << std::endl;
-    std::cout << "[VERSION] Key throttle: " << getKeyThrottleMs() << "ms" << std::endl;
+    // Version information available via getter methods
     
     // Initialize scan tables
     scanTables = std::make_shared<LPXTables>(scanTableFile);
@@ -617,7 +588,7 @@ bool LPXDebugClient::connect(const std::string& serverAddress, int port) {
     if (colonPos != std::string::npos) {
         host = serverAddress.substr(0, colonPos);
         actualPort = std::stoi(serverAddress.substr(colonPos + 1));
-        std::cout << "[DEBUG] Parsed address: host=" << host << ", port=" << actualPort << std::endl;
+        // Address parsed
     }
     
     this->serverAddress = host;
@@ -778,8 +749,7 @@ bool LPXDebugClient::processEvents() {
                     return false;
             }
             
-            std::cout << "[DEBUG CLIENT] Key pressed: '" << keyName << "' (code=" << key 
-                      << "), Total keys: " << totalKeysProcessed << std::endl;
+            // Key processed
             
             // Queue movement command if any movement was detected and throttling allows
             if (shouldSendCommand && (deltaX != 0 || deltaY != 0)) {
@@ -794,36 +764,32 @@ bool LPXDebugClient::processEvents() {
                         pendingDeltaX = deltaX;
                         pendingDeltaY = deltaY;
                         pendingStepSize = stepSize;
-                        std::cout << "[DEBUG CLIENT] Queued movement command: (" 
-                                  << deltaX << ", " << deltaY << ")" << std::endl;
+                        // Command queued
                     }
                     
                     // Try to send if we can (i.e., after receiving a frame)
                     if (canSendCommand.load()) {
                         std::lock_guard<std::mutex> lock(pendingCommandMutex);
                         if (hasPendingCommand) {
-                            std::cout << "[DEBUG CLIENT] Sending queued command immediately" << std::endl;
+                            // Sending queued command
                             bool sent = sendMovementCommand(pendingDeltaX, pendingDeltaY, pendingStepSize);
                             if (sent) {
                                 totalCommandsSent++;
                                 hasPendingCommand = false;
                                 canSendCommand = false;  // Wait for next frame
-                                std::cout << "[DEBUG CLIENT] Command sent successfully. Total sent: " 
-                                          << totalCommandsSent << std::endl;
+                                // Command sent
                             } else {
-                                std::cout << "[DEBUG CLIENT] Failed to send command!" << std::endl;
+                                // Send failed
                             }
                         }
                     } else {
-                        std::cout << "[DEBUG CLIENT] Command queued, waiting for frame sync" << std::endl;
+                        // Command queued, awaiting frame sync
                     }
                     
                     lastKeyTime = now;
                 } else {
                     throttledCommands++;
-                    std::cout << "[DEBUG CLIENT] Command throttled (time since last: " 
-                              << timeSinceLastKey << "ms < " << KEY_THROTTLE_MS 
-                              << "ms). Total throttled: " << throttledCommands << std::endl;
+                    // Command throttled
                 }
             }
         }
@@ -831,10 +797,7 @@ bool LPXDebugClient::processEvents() {
     // Log periodically that we're processing events
     static int counter = 0;
     if (++counter % 100 == 0) {
-        std::cout << "[DEBUG CLIENT] Main thread alive - Events processed: " << counter 
-                  << ", Keys: " << totalKeysProcessed 
-                  << ", Commands sent: " << totalCommandsSent 
-                  << ", Throttled: " << throttledCommands << std::endl;
+        // Main thread processing events
     }
     
     return true;

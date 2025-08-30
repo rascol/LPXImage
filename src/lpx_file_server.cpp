@@ -363,10 +363,7 @@ void FileLPXServer::processingThread() {
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         
-        // Log slow processing
-        if (duration > 100) {
-            std::cout << "[TIMING] LPX processing took: " << duration << "ms (slow!)" << std::endl;
-        }
+        // Processing complete
     }
     
     std::cout << "Processing thread stopped" << std::endl;
@@ -399,7 +396,7 @@ void FileLPXServer::networkThread() {
                 MovementCommand cmd;
                 uint32_t cmdType = LPXStreamProtocol::receiveCommand(clientSocket, &cmd, sizeof(cmd));
                 if (cmdType == LPXStreamProtocol::CMD_MOVEMENT) {
-                    std::cout << "[DEBUG] Received movement command from client " << clientSocket << std::endl;
+                    // Movement command received
                     handleMovementCommand(cmd);
                 }
                 
@@ -459,7 +456,7 @@ void FileLPXServer::acceptClients() {
                 int flags = fcntl(clientSocket, F_GETFL, 0);
                 fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK);
                 
-                std::cout << "[DEBUG] Client " << clientSocket << " added to active set. Total clients: " << clientSockets.size() << std::endl;
+                // Client added to active set
             }
         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
             // An actual error occurred
@@ -476,7 +473,7 @@ void FileLPXServer::acceptClients() {
 }
 
 void FileLPXServer::handleClient(int clientSocket) {
-    std::cout << "[DEBUG] Client handler started for socket " << clientSocket << std::endl;
+    // Client handler started
     
     // This client handler is now dedicated solely to streaming.
     // No command polling is performed here to avoid socket desynchronization.
@@ -496,17 +493,17 @@ void FileLPXServer::handleClient(int clientSocket) {
         int result = select(clientSocket + 1, &readfds, nullptr, nullptr, &timeout);
         
         if (result < 0) {
-            std::cout << "[DEBUG] Client " << clientSocket << " select error" << std::endl;
+            // Client select error
             break;
         } else if (result > 0 && FD_ISSET(clientSocket, &readfds)) {
             // Check if client disconnected by trying to peek at data
             char buffer[1];
             ssize_t peekResult = recv(clientSocket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
             if (peekResult == 0) {
-                std::cout << "[DEBUG] Client " << clientSocket << " disconnected gracefully" << std::endl;
+                // Client disconnected gracefully
                 break;
             } else if (peekResult < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                std::cout << "[DEBUG] Client " << clientSocket << " disconnected with error" << std::endl;
+                // Client disconnected with error
                 break;
             }
         }
@@ -522,7 +519,7 @@ void FileLPXServer::handleClient(int clientSocket) {
         close(clientSocket);
     }
     
-    std::cout << "[DEBUG] Client handler stopped for socket " << clientSocket << std::endl;
+    // Client handler stopped
 }
 
 } // namespace lpx

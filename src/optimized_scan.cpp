@@ -14,6 +14,8 @@
 #include <thread>
 #include <future>
 #include <atomic>
+#include <cstdlib>  // For getenv
+#include <cmath>    // For sin, cos
 
 namespace lpx {
 namespace optimized {
@@ -51,7 +53,7 @@ struct ScanCache {
         }
         
         initialized = true;
-        std::cout << "[OPTIMIZATION] Initialized scan cache with " << mapSize << " entries" << std::endl;
+        // Initialization complete
     }
     
     inline int getCellIndex(int pixelIdx) const {
@@ -61,6 +63,66 @@ struct ScanCache {
 
 // Global cache instance (initialized once per scan tables)
 static ScanCache g_scanCache;
+
+// Generate rainbow colors based on log-polar coordinates for smooth visual transitions
+uint32_t generateRainbowColor(int cellIndex, float spiralPer) {
+    // Convert cell index to approximate log-polar coordinates
+    // This creates a smoother visual pattern that follows the spiral sampling
+    
+    if (cellIndex <= 0) {
+        // Center is red
+        return 0x0000FF; // Red in BGR format
+    }
+    
+    // Calculate approximate radius and angle from cell index
+    // This is a simplified approximation of the log-polar mapping
+    const float radius = std::log(static_cast<float>(cellIndex) / spiralPer + 1.0f);
+    const float angle = static_cast<float>(cellIndex) / spiralPer * 2.0f * M_PI;
+    
+    // Create a smooth color transition based on radius and angle
+    // Use radius for primary hue progression and angle for variation
+    float hue = fmod(radius * 2.0f + angle * 0.1f, 6.28f); // 2*PI
+    if (hue < 0) hue += 6.28f;
+    
+    // Normalize hue to [0, 1] and map to color spectrum
+    hue = hue / 6.28f;
+    
+    // Generate HSV color with varying hue
+    const float saturation = 1.0f;
+    const float value = 1.0f;
+    
+    float r, g, b;
+    
+    // Convert HSV to RGB
+    const float hue_scaled = hue * 6.0f;
+    const int h_i = static_cast<int>(hue_scaled) % 6;
+    const float f = hue_scaled - static_cast<int>(hue_scaled);
+    const float p = value * (1.0f - saturation);
+    const float q = value * (1.0f - saturation * f);
+    const float t_val = value * (1.0f - saturation * (1.0f - f));
+    
+    switch (h_i) {
+        case 0: r = value; g = t_val; b = p; break;
+        case 1: r = q; g = value; b = p; break;
+        case 2: r = p; g = value; b = t_val; break;
+        case 3: r = p; g = q; b = value; break;
+        case 4: r = t_val; g = p; b = value; break;
+        default: r = value; g = p; b = q; break;
+    }
+    
+    // Convert to 8-bit integers and pack as BGR
+    const int r_int = static_cast<int>(r * 255.0f);
+    const int g_int = static_cast<int>(g * 255.0f);
+    const int b_int = static_cast<int>(b * 255.0f);
+    
+    return b_int | (g_int << 8) | (r_int << 16);
+}
+
+// Check if rainbow mode is enabled
+bool isRainbowModeEnabled() {
+    const char* env_var = std::getenv("LPX_RAINBOW_MODE");
+    return (env_var != nullptr && (std::string(env_var) == "1" || std::string(env_var) == "true"));
+}
 
 // Optimized region processing with minimal overhead
 void optimizedProcessImageRegion(const cv::Mat& image, int yStart, int yEnd,
@@ -129,7 +191,7 @@ void optimizedProcessImageRegion(const cv::Mat& image, int yStart, int yEnd,
 
 // High-performance multithreaded scan with optimizations
 bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float x_center, float y_center) {
-    std::cout << "[DEBUG] Entering optimized multithreaded scan" << std::endl;
+    // Starting optimized multithreaded scan
     auto totalStart = std::chrono::high_resolution_clock::now();
     
     auto sct = lpxImage->getScanTables();
@@ -257,17 +319,27 @@ bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float 
     // STEP 3: Fast color computation
     auto colorStart = std::chrono::high_resolution_clock::now();
     
+    // Check if rainbow mode is enabled
+    const bool rainbowMode = isRainbowModeEnabled();
+    // Rainbow mode check completed
+    
     // Convert atomic results back to regular arrays and compute averages
     for (int i = 0; i < nMaxCells; i++) {
-        const int pixelCount = atomicCount[i].load(std::memory_order_relaxed);
-        if (pixelCount > 0) {
-            const int r = atomicAccR[i].load(std::memory_order_relaxed) / pixelCount;
-            const int g = atomicAccG[i].load(std::memory_order_relaxed) / pixelCount;
-            const int b = atomicAccB[i].load(std::memory_order_relaxed) / pixelCount;
-            // Pack in BGR format (OpenCV's native format)
-            cellArray[i] = b | (g << 8) | (r << 16);  // BGR format
-        } else if (i > sct->lastFoveaIndex) {
-            cellArray[i] = 0;  // Black for empty peripheral cells
+        if (rainbowMode) {
+            // Generate rainbow pattern that repeats every viewlength
+            cellArray[i] = generateRainbowColor(i, 1323);
+        } else {
+            // Normal color computation
+            const int pixelCount = atomicCount[i].load(std::memory_order_relaxed);
+            if (pixelCount > 0) {
+                const int r = atomicAccR[i].load(std::memory_order_relaxed) / pixelCount;
+                const int g = atomicAccG[i].load(std::memory_order_relaxed) / pixelCount;
+                const int b = atomicAccB[i].load(std::memory_order_relaxed) / pixelCount;
+                // Pack in BGR format (OpenCV's native format)
+                cellArray[i] = b | (g << 8) | (r << 16);  // BGR format
+            } else if (i > sct->lastFoveaIndex) {
+                cellArray[i] = 0;  // Black for empty peripheral cells
+            }
         }
     }
     
@@ -275,23 +347,7 @@ bool optimizedMultithreadedScan(LPXImage* lpxImage, const cv::Mat& image, float 
     
     auto totalEnd = std::chrono::high_resolution_clock::now();
     
-    // Timing output
-    auto resetDuration = std::chrono::duration_cast<std::chrono::microseconds>(foveaTime - resetTime).count();
-    auto foveaDuration = std::chrono::duration_cast<std::chrono::microseconds>(foveaTime - resetTime).count();
-    auto peripheralDuration = std::chrono::duration_cast<std::chrono::microseconds>(peripheralEnd - peripheralStart).count();
-    auto colorDuration = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - colorStart).count();
-    auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - totalStart).count();
-    
-    std::cout << "[OPTIMIZED-TIMING] Reset: " << resetDuration << "μs (" 
-              << std::fixed << std::setprecision(2) << resetDuration/1000.0 << "ms)" << std::endl;
-    std::cout << "[OPTIMIZED-TIMING] Fovea: " << foveaDuration << "μs (" 
-              << foveaDuration/1000.0 << "ms)" << std::endl;
-    std::cout << "[OPTIMIZED-TIMING] Peripheral: " << peripheralDuration << "μs (" 
-              << peripheralDuration/1000.0 << "ms)" << std::endl;
-    std::cout << "[OPTIMIZED-TIMING] Color: " << colorDuration << "μs (" 
-              << colorDuration/1000.0 << "ms)" << std::endl;
-    std::cout << "[OPTIMIZED-TIMING] TOTAL: " << totalDuration << "μs (" 
-              << totalDuration/1000.0 << "ms)" << std::endl;
+    // Timing calculations removed
     
     return true;
 }
